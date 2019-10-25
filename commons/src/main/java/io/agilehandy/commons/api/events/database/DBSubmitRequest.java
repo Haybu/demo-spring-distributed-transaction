@@ -17,6 +17,7 @@ package io.agilehandy.commons.api.events.database;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.events.JobRequestValues;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DBSubmitRequest implements DBRequest {
 
-	private DBRequestValues request = DBRequestValues.DB_SUBMIT;
+	private JobRequestValues request = JobRequestValues.DB_SUBMIT;
 
 	private UUID globalTxnId;
 

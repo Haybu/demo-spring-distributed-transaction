@@ -13,10 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
+package io.agilehandy.commons.api.events;
 
-public enum BCResponseValues {
+/**
+ * @author Haytham Mohamed
+ **/
+public enum JobResponseValues {
+
+	FILE_TXN_COMPLETED,
+	FILE_TXN_FAIL,
+
+	DB_TXN_COMPLETED,
+	DB_TXN_FAIL,
 
 	BC_TXN_COMPLETED,
-	BC_TXN_ABORTED;
+	BC_TXN_FAIL
+	;
 }

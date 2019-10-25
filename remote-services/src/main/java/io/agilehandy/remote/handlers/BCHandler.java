@@ -17,15 +17,16 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
+import io.agilehandy.commons.api.events.JobResponseValues;
 import io.agilehandy.commons.api.events.blockchain.BCRequest;
-import io.agilehandy.commons.api.events.blockchain.BCResponseValues;
 import io.agilehandy.commons.api.events.blockchain.BCTxnResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * @author Haytham Mohamed
@@ -35,16 +36,16 @@ import org.springframework.messaging.handler.annotation.SendTo;
 @EnableBinding(EventChannels.class)
 public class BCHandler {
 
-	@Value("bc.max")
+	@Value("${bc.max}")
 	private int max;
 
-	@Value("bc.higherBound")
+	@Value("${bc.higherBound}")
 	private int higherBound;
 
-	@Value("bc.lowerBound")
+	@Value("${bc.lowerBound}")
 	private int lowerBound;
 
-	@Value("bc.delay")
+	@Value("${bc.delay}")
 	private int delay;
 
 	private final EventChannels eventChannels;
@@ -55,25 +56,33 @@ public class BCHandler {
 
 	@StreamListener(target = EventChannels.BC_REQUEST
 			, condition = "headers['event_task']=='BC_SUBMIT'")
-	@SendTo(EventChannels.TXN_RESPONSE)
-	public BCTxnResponse handleSubmitBC(@Valid BCRequest request) {
+	public void  handleSubmitBC(@Valid BCRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
-		return (result)?
-				createBCResponse(request, BCResponseValues.BC_TXN_COMPLETED) :
-				createBCResponse(request, BCResponseValues.BC_TXN_ABORTED);
+		BCTxnResponse response = (result)?
+				createBCResponse(request, JobResponseValues.BC_TXN_COMPLETED) :
+				createBCResponse(request, JobResponseValues.BC_TXN_FAIL);
+
+		Message<BCTxnResponse> message = MessageBuilder.withPayload(response)
+				.setHeader("event_task", "BC_SUBMIT")
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
 	@StreamListener(target = EventChannels.BC_REQUEST
 			, condition = "headers['event_task']=='BC_CANCEL'")
-	@SendTo(EventChannels.TXN_RESPONSE)
-	public BCTxnResponse handleCancelBC(@Valid BCRequest request) {
+	public void handleCancelBC(@Valid BCRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
-		return (result)?
-				createBCResponse(request, BCResponseValues.BC_TXN_COMPLETED) :
-				createBCResponse(request, BCResponseValues.BC_TXN_ABORTED);
+		BCTxnResponse response = (result)?
+				createBCResponse(request, JobResponseValues.BC_TXN_COMPLETED) :
+				createBCResponse(request, JobResponseValues.BC_TXN_FAIL);
+
+		Message<BCTxnResponse> message = MessageBuilder.withPayload(response)
+				.setHeader("event_task", "BC_CANCEL")
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
-	private BCTxnResponse createBCResponse(BCRequest request, BCResponseValues result) {
+	private BCTxnResponse createBCResponse(BCRequest request, JobResponseValues result) {
 		BCTxnResponse response = new BCTxnResponse();
 		response.setResponse(result);
 		response.setGlobalTxnId(request.getGlobalTxnId());

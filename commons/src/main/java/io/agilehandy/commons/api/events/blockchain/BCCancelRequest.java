@@ -27,9 +27,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class BCCancelRequest implements JobRequestValues {
+public class BCCancelRequest implements BCRequest {
 
-	private BCRequestValues request = BCRequestValues.BC_CANCEL;
+	private JobRequestValues request = JobRequestValues.BC_CANCEL;
 
 	private UUID globalTxnId;
 

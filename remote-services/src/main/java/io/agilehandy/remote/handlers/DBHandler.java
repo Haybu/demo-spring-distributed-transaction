@@ -17,15 +17,16 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
+import io.agilehandy.commons.api.events.JobResponseValues;
 import io.agilehandy.commons.api.events.database.DBRequest;
-import io.agilehandy.commons.api.events.database.DBResponseValues;
 import io.agilehandy.commons.api.events.database.DBTxnResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * @author Haytham Mohamed
@@ -35,16 +36,16 @@ import org.springframework.messaging.handler.annotation.SendTo;
 @EnableBinding(EventChannels.class)
 public class DBHandler {
 
-	@Value("db.max")
+	@Value("${db.max}")
 	private int max;
 
-	@Value("db.higherBound")
+	@Value("${db.higherBound}")
 	private int higherBound;
 
-	@Value("db.lowerBound")
+	@Value("${db.lowerBound}")
 	private int lowerBound;
 
-	@Value("db.delay")
+	@Value("${db.delay}")
 	private int delay;
 
 	private final EventChannels eventChannels;
@@ -55,25 +56,33 @@ public class DBHandler {
 
 	@StreamListener(target = EventChannels.DB_REQUEST
 			, condition = "headers['event_task']=='DB_SUBMIT'")
-	@SendTo(EventChannels.TXN_RESPONSE)
-	public DBTxnResponse handleSubmitDB(@Valid DBRequest request) {
+	public void handleSubmitDB(@Valid DBRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
-		return (result)?
-				createDBResponse(request, DBResponseValues.DB_TXN_COMPLETED) :
-				createDBResponse(request, DBResponseValues.DB_TXN_ABORTED);
+		DBTxnResponse response = (result)?
+				createDBResponse(request, JobResponseValues.DB_TXN_COMPLETED) :
+				createDBResponse(request, JobResponseValues.DB_TXN_FAIL);
+
+		Message<DBTxnResponse> message = MessageBuilder.withPayload(response)
+				.setHeader("event_task", "DB_SUBMIT")
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
 	@StreamListener(target = EventChannels.DB_REQUEST
 			, condition = "headers['event_task']=='DB_CANCEL'")
-	@SendTo(EventChannels.TXN_RESPONSE)
-	public DBTxnResponse handleCancelDB(@Valid DBRequest request) {
+	public void handleCancelDB(@Valid DBRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
-		return (result)?
-				createDBResponse(request, DBResponseValues.DB_TXN_COMPLETED) :
-				createDBResponse(request, DBResponseValues.DB_TXN_ABORTED);
+		DBTxnResponse response = (result)?
+				createDBResponse(request, JobResponseValues.DB_TXN_COMPLETED) :
+				createDBResponse(request, JobResponseValues.DB_TXN_FAIL);
+
+		Message<DBTxnResponse> message = MessageBuilder.withPayload(response)
+				.setHeader("event_task", "DB_CANCEL")
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
-	private DBTxnResponse createDBResponse(DBRequest request, DBResponseValues result) {
+	private DBTxnResponse createDBResponse(DBRequest request, JobResponseValues result) {
 		DBTxnResponse response = new DBTxnResponse();
 		response.setResponse(result);
 		response.setGlobalTxnId(request.getGlobalTxnId());

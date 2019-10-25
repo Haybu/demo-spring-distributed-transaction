@@ -13,9 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.database;
+package io.agilehandy.saga.statemachine;
 
-public enum DBResponseValues {
-	DB_TXN_COMPLETED,
-	DB_TXN_ABORTED,
+import lombok.extern.log4j.Log4j2;
+
+/**
+ * @author Haytham Mohamed
+ **/
+
+//@EnableStateMachineFactory(contextEvents = false)
+@Log4j2
+public class TxnManagerStateMachine {
 }

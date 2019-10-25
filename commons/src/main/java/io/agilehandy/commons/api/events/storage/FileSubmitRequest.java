@@ -17,6 +17,7 @@ package io.agilehandy.commons.api.events.storage;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.events.JobRequestValues;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FileSubmitRequest implements FileRequest {
 
-	private FileRequestValues request = FileRequestValues.FILE_SUBMIT;
+	private JobRequestValues request = JobRequestValues.FILE_SUBMIT;
 
 	private UUID globalTxnId;
 

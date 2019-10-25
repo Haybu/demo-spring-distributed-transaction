@@ -17,9 +17,11 @@ package io.agilehandy.commons.api.events.blockchain;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.events.JobRequestValues;
+
 public interface BCRequest {
 
-	public BCRequestValues getRequest();
+	public JobRequestValues getRequest();
 	public UUID getGlobalTxnId();
 	public UUID getJobId();
 	public UUID getContentId();

@@ -17,6 +17,7 @@ package io.agilehandy.commons.api.events.blockchain;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.events.JobRequestValues;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BCSubmitRequest implements BCRequest {
 
-	private BCRequestValues request = BCRequestValues.BC_SUBMIT;
+	private JobRequestValues request = JobRequestValues.BC_SUBMIT;
 
 	private UUID globalTxnId;
 

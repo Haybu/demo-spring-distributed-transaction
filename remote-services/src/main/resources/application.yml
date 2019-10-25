@@ -31,7 +31,7 @@ file:
   max: 10
   lowerBound: 4
   higherBound: 7
-  delay: 1.5
+  delay: 1
 
 db:
   max: 10

@@ -17,15 +17,16 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
+import io.agilehandy.commons.api.events.JobResponseValues;
 import io.agilehandy.commons.api.events.storage.FileRequest;
-import io.agilehandy.commons.api.events.storage.FileResponseValues;
 import io.agilehandy.commons.api.events.storage.FileTxnResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 /**
  * @author Haytham Mohamed
@@ -35,16 +36,16 @@ import org.springframework.messaging.handler.annotation.SendTo;
 @EnableBinding(EventChannels.class)
 public class FileHandler {
 
-	@Value("file.max")
+	@Value("${file.max}")
 	private int max;
 
-	@Value("file.higherBound")
+	@Value("${file.higherBound}")
 	private int higherBound;
 
-	@Value("file.lowerBound")
+	@Value("${file.lowerBound}")
 	private int lowerBound;
 
-	@Value("file.delay")
+	@Value("${file.delay}")
 	private int delay;
 
 	private final EventChannels eventChannels;
@@ -55,25 +56,33 @@ public class FileHandler {
 
 	@StreamListener(target = EventChannels.FILE_REQUEST
 			, condition = "headers['event_task']=='FILE_SUBMIT'")
-	@SendTo(EventChannels.TXN_RESPONSE)
-	public FileTxnResponse handleSubmitFile(@Valid FileRequest request) {
+	public void handleSubmitFile(@Valid FileRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
-		return (result)?
-				createFileResponse(request, FileResponseValues.FILE_TXN_COMPLETED) :
-				createFileResponse(request, FileResponseValues.FILE_TXN_ABORTED);
+		FileTxnResponse response = (result)?
+				createFileResponse(request, JobResponseValues.FILE_TXN_COMPLETED) :
+				createFileResponse(request, JobResponseValues.FILE_TXN_FAIL);
+
+		Message<FileTxnResponse> message = MessageBuilder.withPayload(response)
+				.setHeader("event_task", "FILE_SUBMIT")
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
 	@StreamListener(target = EventChannels.FILE_REQUEST
 			, condition = "headers['event_task']=='FILE_CANCEL'")
-	@SendTo(EventChannels.TXN_RESPONSE)
-	public FileTxnResponse handleCancelFile(@Valid FileRequest request) {
+	public void handleCancelFile(@Valid FileRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
-		return (result)?
-				createFileResponse(request, FileResponseValues.FILE_TXN_COMPLETED) :
-				createFileResponse(request, FileResponseValues.FILE_TXN_ABORTED);
+		FileTxnResponse response = (result)?
+				createFileResponse(request, JobResponseValues.FILE_TXN_COMPLETED) :
+				createFileResponse(request, JobResponseValues.FILE_TXN_FAIL);
+
+		Message<FileTxnResponse> message = MessageBuilder.withPayload(response)
+				.setHeader("event_task", "FILE_CANCEL")
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
-	private FileTxnResponse createFileResponse(FileRequest request, FileResponseValues result) {
+	private FileTxnResponse createFileResponse(FileRequest request, JobResponseValues result) {
 		FileTxnResponse response = new FileTxnResponse();
 		response.setResponse(result);
 		response.setGlobalTxnId(request.getGlobalTxnId());

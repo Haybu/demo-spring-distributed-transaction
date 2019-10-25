@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
+package io.agilehandy.commons.api.events;
 
-/**
- * @author Haytham Mohamed
- **/
-public enum BCRequestValues {
+public enum JobRequestValues {
+
+	JOB_START,
+	JOB_COMPLETE,
+	JOB_FAIL,
+
+	FILE_SUBMIT,
+	FILE_CANCEL,
+
+	DB_SUBMIT,
+	DB_CANCEL,
 
 	BC_SUBMIT,
-	BC_CANCEL;
+	BC_CANCEL
+	;
 }

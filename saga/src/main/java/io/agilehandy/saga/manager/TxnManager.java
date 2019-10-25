@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.database;
+package io.agilehandy.saga.manager;
 
-public enum DBRequestValues {
-	DB_SUBMIT,
-	DB_CANCEL;
+/**
+ * @author Haytham Mohamed
+ **/
+public class TxnManager {
 }
