@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.saga.statemachine;
+package io.agilehandy.saga;
 
 import java.util.EnumSet;
 
@@ -117,6 +117,11 @@ public class TxnManagerStateMachine
 			@Override
 			public void stateExited(State state) {
 				log.info("State machine exited");
+			}
+
+			@Override
+			public void stateMachineStopped(StateMachine stateMachine) {
+				log.info("State machine stopped");
 			}
 		};
 
