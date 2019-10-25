@@ -17,7 +17,7 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
-import io.agilehandy.commons.api.events.JobResponseValues;
+import io.agilehandy.commons.api.events.JobEvent;
 import io.agilehandy.commons.api.events.database.DBRequest;
 import io.agilehandy.commons.api.events.database.DBTxnResponse;
 
@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -55,34 +54,28 @@ public class DBHandler {
 	}
 
 	@StreamListener(target = EventChannels.DB_REQUEST
-			, condition = "headers['event_task']=='DB_SUBMIT'")
+			, condition = "headers['saga_request']=='DB_SUBMIT'")
 	public void handleSubmitDB(@Valid DBRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		DBTxnResponse response = (result)?
-				createDBResponse(request, JobResponseValues.DB_TXN_COMPLETED) :
-				createDBResponse(request, JobResponseValues.DB_TXN_FAIL);
+				createDBResponse(request, JobEvent.DB_SUBMIT_COMPLETE) :
+				createDBResponse(request, JobEvent.DB_SUBMIT_FAIL);
 
-		Message<DBTxnResponse> message = MessageBuilder.withPayload(response)
-				.setHeader("event_task", "DB_SUBMIT")
-				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
 	}
 
 	@StreamListener(target = EventChannels.DB_REQUEST
-			, condition = "headers['event_task']=='DB_CANCEL'")
+			, condition = "headers['saga_request']=='DB_CANCEL'")
 	public void handleCancelDB(@Valid DBRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		DBTxnResponse response = (result)?
-				createDBResponse(request, JobResponseValues.DB_TXN_COMPLETED) :
-				createDBResponse(request, JobResponseValues.DB_TXN_FAIL);
+				createDBResponse(request, JobEvent.DB_CANCEL_COMPLETE) :
+				createDBResponse(request, JobEvent.DB_CANCEL_FAIL);
 
-		Message<DBTxnResponse> message = MessageBuilder.withPayload(response)
-				.setHeader("event_task", "DB_CANCEL")
-				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
 	}
 
-	private DBTxnResponse createDBResponse(DBRequest request, JobResponseValues result) {
+	private DBTxnResponse createDBResponse(DBRequest request, JobEvent result) {
 		DBTxnResponse response = new DBTxnResponse();
 		response.setResponse(result);
 		response.setGlobalTxnId(request.getGlobalTxnId());

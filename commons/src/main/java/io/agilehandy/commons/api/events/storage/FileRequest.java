@@ -17,11 +17,11 @@ package io.agilehandy.commons.api.events.storage;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobRequestValues;
+import io.agilehandy.commons.api.events.JobState;
 
 public interface FileRequest {
 
-	public JobRequestValues getRequest();
+	public JobState getRequest();
 	public UUID getGlobalTxnId();
 	public UUID getFileId();
 	public String getFilename();

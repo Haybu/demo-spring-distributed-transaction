@@ -15,18 +15,19 @@
  */
 package io.agilehandy.commons.api.events;
 
-/**
- * @author Haytham Mohamed
- **/
-public enum JobResponseValues {
+public enum JobState {
 
-	FILE_TXN_COMPLETED,
-	FILE_TXN_FAIL,
+	JOB_START,
+	JOB_COMPLETE,
+	JOB_FAIL,
 
-	DB_TXN_COMPLETED,
-	DB_TXN_FAIL,
+	FILE_SUBMIT,
+	FILE_CANCEL,
 
-	BC_TXN_COMPLETED,
-	BC_TXN_FAIL
+	DB_SUBMIT,
+	DB_CANCEL,
+
+	BC_SUBMIT,
+	BC_CANCEL
 	;
 }

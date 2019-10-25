@@ -17,7 +17,7 @@ package io.agilehandy.commons.api.events.storage;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobRequestValues;
+import io.agilehandy.commons.api.events.JobState;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FileCancelRequest implements FileRequest {
 
-	private JobRequestValues request = JobRequestValues.FILE_CANCEL;
+	private JobState request = JobState.FILE_CANCEL;
 
 	private UUID globalTxnId;
 

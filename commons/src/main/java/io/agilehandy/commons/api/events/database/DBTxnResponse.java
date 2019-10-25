@@ -17,7 +17,7 @@ package io.agilehandy.commons.api.events.database;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobResponseValues;
+import io.agilehandy.commons.api.events.JobEvent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class DBTxnResponse {
-	private JobResponseValues response;
+	private JobEvent response;
 
 	private UUID globalTxnId;
 

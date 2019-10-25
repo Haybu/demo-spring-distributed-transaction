@@ -17,7 +17,7 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
-import io.agilehandy.commons.api.events.JobResponseValues;
+import io.agilehandy.commons.api.events.JobEvent;
 import io.agilehandy.commons.api.events.storage.FileRequest;
 import io.agilehandy.commons.api.events.storage.FileTxnResponse;
 
@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -55,34 +54,28 @@ public class FileHandler {
 	}
 
 	@StreamListener(target = EventChannels.FILE_REQUEST
-			, condition = "headers['event_task']=='FILE_SUBMIT'")
+			, condition = "headers['saga_request']=='FILE_SUBMIT'")
 	public void handleSubmitFile(@Valid FileRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		FileTxnResponse response = (result)?
-				createFileResponse(request, JobResponseValues.FILE_TXN_COMPLETED) :
-				createFileResponse(request, JobResponseValues.FILE_TXN_FAIL);
+				createFileResponse(request, JobEvent.FILE_SUBMIT_COMPLETE) :
+				createFileResponse(request, JobEvent.FILE_SUBMIT_FAIL);
 
-		Message<FileTxnResponse> message = MessageBuilder.withPayload(response)
-				.setHeader("event_task", "FILE_SUBMIT")
-				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
 	}
 
 	@StreamListener(target = EventChannels.FILE_REQUEST
-			, condition = "headers['event_task']=='FILE_CANCEL'")
+			, condition = "headers['saga_request']=='FILE_CANCEL'")
 	public void handleCancelFile(@Valid FileRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		FileTxnResponse response = (result)?
-				createFileResponse(request, JobResponseValues.FILE_TXN_COMPLETED) :
-				createFileResponse(request, JobResponseValues.FILE_TXN_FAIL);
+				createFileResponse(request, JobEvent.FILE_CANCEL_COMPLETE) :
+				createFileResponse(request, JobEvent.FILE_CANCEL_FAIL);
 
-		Message<FileTxnResponse> message = MessageBuilder.withPayload(response)
-				.setHeader("event_task", "FILE_CANCEL")
-				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
 	}
 
-	private FileTxnResponse createFileResponse(FileRequest request, JobResponseValues result) {
+	private FileTxnResponse createFileResponse(FileRequest request, JobEvent result) {
 		FileTxnResponse response = new FileTxnResponse();
 		response.setResponse(result);
 		response.setGlobalTxnId(request.getGlobalTxnId());

@@ -17,7 +17,7 @@ package io.agilehandy.commons.api.events.blockchain;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobResponseValues;
+import io.agilehandy.commons.api.events.JobEvent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BCTxnResponse {
 
-	private JobResponseValues response;
+	private JobEvent response;
 
 	private UUID globalTxnId;
 

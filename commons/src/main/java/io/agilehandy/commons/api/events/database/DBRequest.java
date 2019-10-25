@@ -17,11 +17,11 @@ package io.agilehandy.commons.api.events.database;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobRequestValues;
+import io.agilehandy.commons.api.events.JobState;
 
 public interface DBRequest {
 
-	public JobRequestValues getRequest();
+	public JobState getRequest();
 	public UUID getGlobalTxnId();
 	public UUID getJobId();
 	public UUID getRecordId();

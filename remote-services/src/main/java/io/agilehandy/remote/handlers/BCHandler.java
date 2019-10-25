@@ -17,7 +17,7 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
-import io.agilehandy.commons.api.events.JobResponseValues;
+import io.agilehandy.commons.api.events.JobEvent;
 import io.agilehandy.commons.api.events.blockchain.BCRequest;
 import io.agilehandy.commons.api.events.blockchain.BCTxnResponse;
 
@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -55,34 +54,28 @@ public class BCHandler {
 	}
 
 	@StreamListener(target = EventChannels.BC_REQUEST
-			, condition = "headers['event_task']=='BC_SUBMIT'")
+			, condition = "headers['saga_request']=='BC_SUBMIT'")
 	public void  handleSubmitBC(@Valid BCRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		BCTxnResponse response = (result)?
-				createBCResponse(request, JobResponseValues.BC_TXN_COMPLETED) :
-				createBCResponse(request, JobResponseValues.BC_TXN_FAIL);
+				createBCResponse(request, JobEvent.BC_SUBMIT_COMPLETE) :
+				createBCResponse(request, JobEvent.BC_SUBMIT_FAIL);
 
-		Message<BCTxnResponse> message = MessageBuilder.withPayload(response)
-				.setHeader("event_task", "BC_SUBMIT")
-				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
 	}
 
 	@StreamListener(target = EventChannels.BC_REQUEST
-			, condition = "headers['event_task']=='BC_CANCEL'")
+			, condition = "headers['saga_request']=='BC_CANCEL'")
 	public void handleCancelBC(@Valid BCRequest request) {
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		BCTxnResponse response = (result)?
-				createBCResponse(request, JobResponseValues.BC_TXN_COMPLETED) :
-				createBCResponse(request, JobResponseValues.BC_TXN_FAIL);
+				createBCResponse(request, JobEvent.BC_CANCEL_COMPLETE) :
+				createBCResponse(request, JobEvent.BC_CANCEL_FAIL);
 
-		Message<BCTxnResponse> message = MessageBuilder.withPayload(response)
-				.setHeader("event_task", "BC_CANCEL")
-				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
 	}
 
-	private BCTxnResponse createBCResponse(BCRequest request, JobResponseValues result) {
+	private BCTxnResponse createBCResponse(BCRequest request, JobEvent result) {
 		BCTxnResponse response = new BCTxnResponse();
 		response.setResponse(result);
 		response.setGlobalTxnId(request.getGlobalTxnId());
