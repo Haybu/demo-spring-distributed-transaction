@@ -15,5 +15,14 @@
  */
 package io.agilehandy.commons.api.events.database;
 
+import java.util.UUID;
+
 public interface DBRequest {
+
+	public DBRequestValues getRequest();
+	public UUID getGlobalTxnId();
+	public UUID getJobId();
+	public UUID getRecordId();
+	public String getField1();
+	public String getField2();
 }

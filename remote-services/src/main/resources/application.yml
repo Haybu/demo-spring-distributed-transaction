@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: remote-services
+  cloud:
+    stream:
+      binders:
+        fileRequest:
+          destination: file-request
+          producer.headerMode: headers
+          contentType: application/json
+          group: file-requests-group
+        dbRequest:
+          destination: db-request
+          producer.headerMode: headers
+          contentType: application/json
+          group: db-requests-group
+        bcRequest:
+          destination: bc-request
+          producer.headerMode: headers
+          contentType: application/json
+          group: bc-requests-group
+        txnResponse:
+          destination: txn-response
+          producer.headerMode: headers
+          contentType: application/json
+
+# random number between 0 to max
+# if random number falls between the lower and higher bound simulation assumes error in a txn
+# delay to simulate number of seconds a txn takes to process a request
+file:
+  max: 10
+  lowerBound: 4
+  higherBound: 7
+  delay: 1.5
+
+db:
+  max: 10
+  lowerBound: 3
+  higherBound: 5
+  delay: 1
+
+bc:
+  max: 10
+  lowerBound: 4
+  higherBound: 8
+  delay: 2

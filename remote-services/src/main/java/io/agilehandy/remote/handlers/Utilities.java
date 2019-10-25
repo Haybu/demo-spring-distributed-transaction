@@ -13,25 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
+package io.agilehandy.remote.handlers;
 
-import java.util.UUID;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import java.util.Random;
 
 /**
  * @author Haytham Mohamed
  **/
+public class Utilities {
 
-@Data
-@NoArgsConstructor
-public class BCTxnResponse {
+	public static boolean simulateTxn(int max, int lowerBound, int higherBound
+			, int maxSecondsToDelay) {
+		int randomInteger = new Random().nextInt(max);
 
-	private BCResponseValues response;
+		if (randomInteger > lowerBound && randomInteger < higherBound) {
+			delay(maxSecondsToDelay);
+			return false;
+		}
 
-	private UUID globalTxnId;
+		delay(maxSecondsToDelay);
+		return true;
+	}
 
-	private UUID jobId;
-	private UUID contentId;
+	private static void delay(int maxSecondsToDelay) {
+		try {
+			int secondsToSleep = new Random().nextInt(maxSecondsToDelay);
+			Thread.sleep(secondsToSleep * 1000);
+		} catch (InterruptedException ie) {
+			Thread.currentThread().interrupt();
+		}
+	}
 }

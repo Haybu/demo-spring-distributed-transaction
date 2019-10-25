@@ -15,5 +15,13 @@
  */
 package io.agilehandy.commons.api.events.storage;
 
+import java.util.UUID;
+
 public interface FileRequest {
+
+	public FileRequestValues getRequest();
+	public UUID getGlobalTxnId();
+	public UUID getFileId();
+	public String getFilename();
+	public UUID getJobId();
 }
