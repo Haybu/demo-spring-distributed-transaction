@@ -13,30 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events;
+package io.agilehandy.commons.api.database;
+
+import java.util.UUID;
+
+import io.agilehandy.commons.api.jobs.JobState;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author Haytham Mohamed
  **/
-public enum JobEvent {
 
-	JOB_TXN_START,
-	JOB_TXN_COMPLETE,
-	JOB_TXN_FAIL,
+@Data
+@NoArgsConstructor
+public class DBCancelRequest implements DBRequest {
 
-	FILE_SUBMIT_COMPLETE,
-	FILE_SUBMIT_FAIL,
-	FILE_CANCEL_COMPLETE,
-	FILE_CANCEL_FAIL,
+	private JobState request = JobState.DB_CANCEL;
 
-	DB_SUBMIT_COMPLETE,
-	DB_SUBMIT_FAIL,
-	DB_CANCEL_COMPLETE,
-	DB_CANCEL_FAIL,
+	private UUID globalTxnId;
 
-	BC_SUBMIT_COMPLETE,
-	BC_SUBMIT_FAIL,
-	BC_CANCEL_COMPLETE,
-	BC_CANCEL_FAIL
-	;
+	private UUID jobId;
+	private UUID recordId;
 }

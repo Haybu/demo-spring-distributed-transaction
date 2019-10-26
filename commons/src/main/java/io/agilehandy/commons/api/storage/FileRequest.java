@@ -13,25 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.database;
+package io.agilehandy.commons.api.storage;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobEvent;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.agilehandy.commons.api.jobs.JobState;
 
-/**
- * @author Haytham Mohamed
- **/
+public interface FileRequest {
 
-@Data
-@NoArgsConstructor
-public class DBTxnResponse {
-	private JobEvent response;
-
-	private UUID globalTxnId;
-
-	private UUID jobId;
-	private UUID recordId;
+	JobState getRequest();
+	UUID getGlobalTxnId();
+	UUID getFileId();
+	String getFilename();
+	UUID getJobId();
 }

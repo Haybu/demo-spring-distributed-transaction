@@ -17,9 +17,9 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
-import io.agilehandy.commons.api.events.JobEvent;
-import io.agilehandy.commons.api.events.blockchain.BCRequest;
-import io.agilehandy.commons.api.events.blockchain.BCTxnResponse;
+import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.blockchain.BCRequest;
+import io.agilehandy.commons.api.blockchain.BCTxnResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;

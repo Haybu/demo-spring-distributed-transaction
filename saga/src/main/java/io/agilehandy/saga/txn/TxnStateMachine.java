@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.saga;
+package io.agilehandy.saga.txn;
 
 import java.util.EnumSet;
 
-import io.agilehandy.commons.api.events.JobState;
-import io.agilehandy.commons.api.events.JobEvent;
+import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.jobs.JobState;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.statemachine.StateMachine;
@@ -37,8 +37,33 @@ import org.springframework.statemachine.state.State;
 
 @EnableStateMachineFactory(contextEvents = false)
 @Log4j2
-public class TxnManagerStateMachine
+public class TxnStateMachine
 		extends EnumStateMachineConfigurerAdapter<JobState, JobEvent> {
+
+	@Override
+	public void configure(StateMachineConfigurationConfigurer<JobState, JobEvent> config) throws Exception {
+		StateMachineListener<JobState, JobEvent> listener = new StateMachineListenerAdapter() {
+			@Override
+			public void stateMachineStarted(StateMachine stateMachine) {
+				log.info("State machine started");
+			}
+
+			@Override
+			public void stateExited(State state) {
+				log.info("State machine exited");
+			}
+
+			@Override
+			public void stateMachineStopped(StateMachine stateMachine) {
+				log.info("State machine stopped");
+			}
+		};
+
+		config.withConfiguration()
+				.autoStartup(false)
+				.machineId("saga-machine")
+				.listener(listener);
+	}
 
 	@Override
 	public void configure(StateMachineStateConfigurer<JobState, JobEvent> states) throws Exception {
@@ -105,31 +130,5 @@ public class TxnManagerStateMachine
 					.event(JobEvent.DB_CANCEL_COMPLETE)
 				;
 	}
-
-	@Override
-	public void configure(StateMachineConfigurationConfigurer<JobState, JobEvent> config) throws Exception {
-		StateMachineListener<JobState, JobEvent> listener = new StateMachineListenerAdapter() {
-			@Override
-			public void stateMachineStarted(StateMachine stateMachine) {
-				log.info("State machine started");
-			}
-
-			@Override
-			public void stateExited(State state) {
-				log.info("State machine exited");
-			}
-
-			@Override
-			public void stateMachineStopped(StateMachine stateMachine) {
-				log.info("State machine stopped");
-			}
-		};
-
-		config.withConfiguration()
-				.autoStartup(false)
-				.machineId("saga-machine")
-				.listener(listener);
-	}
-
 
 }

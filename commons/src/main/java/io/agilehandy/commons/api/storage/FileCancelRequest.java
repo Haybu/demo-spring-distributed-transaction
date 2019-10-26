@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
+package io.agilehandy.commons.api.storage;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobState;
+import io.agilehandy.commons.api.jobs.JobState;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,12 +27,14 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class BCCancelRequest implements BCRequest {
+public class FileCancelRequest implements FileRequest {
 
-	private JobState request = JobState.BC_CANCEL;
+	private JobState request = JobState.FILE_CANCEL;
 
 	private UUID globalTxnId;
 
 	private UUID jobId;
-	private UUID contentId;
+	private UUID fileId;
+	private String filename;
+
 }

@@ -17,9 +17,9 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
-import io.agilehandy.commons.api.events.JobEvent;
-import io.agilehandy.commons.api.events.database.DBRequest;
-import io.agilehandy.commons.api.events.database.DBTxnResponse;
+import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.database.DBRequest;
+import io.agilehandy.commons.api.database.DBTxnResponse;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;

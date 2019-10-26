@@ -13,17 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.storage;
+package io.agilehandy.saga.txn;
 
-import java.util.UUID;
+import org.springframework.data.repository.CrudRepository;
 
-import io.agilehandy.commons.api.events.JobState;
+public interface TxnRepository extends CrudRepository<Transaction, Long> {
 
-public interface FileRequest {
-
-	public JobState getRequest();
-	public UUID getGlobalTxnId();
-	public UUID getFileId();
-	public String getFilename();
-	public UUID getJobId();
+	public Transaction findTransactionByJobIdAndTxnId(Long jobId, String txnId);
 }

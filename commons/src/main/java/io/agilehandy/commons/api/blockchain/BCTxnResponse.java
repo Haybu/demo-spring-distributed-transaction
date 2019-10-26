@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
+package io.agilehandy.commons.api.blockchain;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobEvent;
+import io.agilehandy.commons.api.jobs.JobEvent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

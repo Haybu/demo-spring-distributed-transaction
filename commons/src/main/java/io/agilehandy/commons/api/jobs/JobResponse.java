@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.storage;
+package io.agilehandy.commons.api.jobs;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobState;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,14 +26,11 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class FileCancelRequest implements FileRequest {
+public class JobResponse {
 
-	private JobState request = JobState.FILE_CANCEL;
+	private JobEvent response;
 
 	private UUID globalTxnId;
 
 	private UUID jobId;
-	private UUID fileId;
-	private String filename;
-
 }

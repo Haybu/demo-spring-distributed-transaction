@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
+package io.agilehandy.commons.api.database;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobState;
+import io.agilehandy.commons.api.jobs.JobState;
 
-public interface BCRequest {
+public interface DBRequest {
 
-	public JobState getRequest();
-	public UUID getGlobalTxnId();
-	public UUID getJobId();
-	public UUID getContentId();
+	JobState getRequest();
+	UUID getGlobalTxnId();
+	UUID getJobId();
+	UUID getRecordId();
 }

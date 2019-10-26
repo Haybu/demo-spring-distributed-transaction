@@ -13,29 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.database;
+package io.agilehandy.commons.api.blockchain;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.events.JobState;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import io.agilehandy.commons.api.jobs.JobState;
 
-/**
- * @author Haytham Mohamed
- **/
+public interface BCRequest {
 
-@Data
-@NoArgsConstructor
-public class DBSubmitRequest implements DBRequest {
-
-	private JobState request = JobState.DB_SUBMIT;
-
-	private UUID globalTxnId;
-
-	private UUID jobId;
-    private UUID recordId;
-	private String field1;
-	private String field2;
-
+	JobState getRequest();
+	UUID getGlobalTxnId();
+	UUID getJobId();
+	UUID getContentId();
 }

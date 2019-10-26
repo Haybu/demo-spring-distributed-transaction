@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events;
+package io.agilehandy.commons.api.database;
 
-public enum JobState {
+import java.util.UUID;
 
-	JOB_START,
-	JOB_COMPLETE,
-	JOB_FAIL,
+import io.agilehandy.commons.api.jobs.JobEvent;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-	FILE_SUBMIT,
-	FILE_CANCEL,
+/**
+ * @author Haytham Mohamed
+ **/
 
-	DB_SUBMIT,
-	DB_CANCEL,
+@Data
+@NoArgsConstructor
+public class DBTxnResponse {
+	private JobEvent response;
 
-	BC_SUBMIT,
-	BC_CANCEL
-	;
+	private UUID globalTxnId;
+
+	private UUID jobId;
+	private UUID recordId;
 }

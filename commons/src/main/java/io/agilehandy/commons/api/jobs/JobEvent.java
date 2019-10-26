@@ -13,27 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.events.blockchain;
-
-import java.util.UUID;
-
-import io.agilehandy.commons.api.events.JobState;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package io.agilehandy.commons.api.jobs;
 
 /**
  * @author Haytham Mohamed
  **/
+public enum JobEvent {
 
-@Data
-@NoArgsConstructor
-public class BCSubmitRequest implements BCRequest {
+	JOB_TXN_START,
+	JOB_TXN_COMPLETE,
+	JOB_TXN_FAIL,
 
-	private JobState request = JobState.BC_SUBMIT;
+	FILE_SUBMIT_COMPLETE,
+	FILE_SUBMIT_FAIL,
+	FILE_CANCEL_COMPLETE,
+	FILE_CANCEL_FAIL,
 
-	private UUID globalTxnId;
+	DB_SUBMIT_COMPLETE,
+	DB_SUBMIT_FAIL,
+	DB_CANCEL_COMPLETE,
+	DB_CANCEL_FAIL,
 
-	private UUID jobId;
-	private UUID contentId;
-
+	BC_SUBMIT_COMPLETE,
+	BC_SUBMIT_FAIL,
+	BC_CANCEL_COMPLETE,
+	BC_CANCEL_FAIL
+	;
 }
