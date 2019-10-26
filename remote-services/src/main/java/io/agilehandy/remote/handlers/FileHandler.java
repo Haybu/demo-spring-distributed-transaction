@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -60,8 +61,7 @@ public class FileHandler {
 		FileTxnResponse response = (result)?
 				createFileResponse(request, JobEvent.FILE_SUBMIT_COMPLETE) :
 				createFileResponse(request, JobEvent.FILE_SUBMIT_FAIL);
-
-		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
+		sendResponse(response);
 	}
 
 	@StreamListener(target = EventChannels.FILE_REQUEST
@@ -71,8 +71,14 @@ public class FileHandler {
 		FileTxnResponse response = (result)?
 				createFileResponse(request, JobEvent.FILE_CANCEL_COMPLETE) :
 				createFileResponse(request, JobEvent.FILE_CANCEL_FAIL);
+		sendResponse(response);
+	}
 
-		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
+	private void sendResponse(FileTxnResponse response) {
+		Message message = MessageBuilder.withPayload(response)
+				.setHeader("saga_response", response.getResponse())
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
 	private FileTxnResponse createFileResponse(FileRequest request, JobEvent result) {

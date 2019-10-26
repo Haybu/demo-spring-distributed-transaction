@@ -17,14 +17,15 @@ package io.agilehandy.remote.handlers;
 
 import javax.validation.Valid;
 
-import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.blockchain.BCRequest;
 import io.agilehandy.commons.api.blockchain.BCTxnResponse;
+import io.agilehandy.commons.api.jobs.JobEvent;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -60,8 +61,7 @@ public class BCHandler {
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_SUBMIT_COMPLETE) :
 				createBCResponse(request, JobEvent.BC_SUBMIT_FAIL);
-
-		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
+		sendResponse(response);
 	}
 
 	@StreamListener(target = EventChannels.BC_REQUEST
@@ -71,8 +71,14 @@ public class BCHandler {
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_CANCEL_COMPLETE) :
 				createBCResponse(request, JobEvent.BC_CANCEL_FAIL);
+		sendResponse(response);
+	}
 
-		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
+	private void sendResponse(BCTxnResponse response) {
+		Message message = MessageBuilder.withPayload(response)
+				.setHeader("saga_response", response.getResponse())
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
 	private BCTxnResponse createBCResponse(BCRequest request, JobEvent result) {

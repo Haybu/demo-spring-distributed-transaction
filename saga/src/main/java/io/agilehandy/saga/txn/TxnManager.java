@@ -18,6 +18,8 @@ package io.agilehandy.saga.txn;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import javax.validation.Valid;
+
 import io.agilehandy.commons.api.blockchain.BCCancelRequest;
 import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.database.DBCancelRequest;
@@ -27,11 +29,13 @@ import io.agilehandy.commons.api.jobs.JobRequest;
 import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.commons.api.storage.FileCancelRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
+import io.agilehandy.commons.api.storage.FileTxnResponse;
 import io.agilehandy.saga.annotations.StatesOnTransition;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
@@ -47,6 +51,7 @@ import org.springframework.statemachine.config.StateMachineFactory;
 @Log4j2
 @WithStateMachine( id = "saga-machine")
 @EnableBinding(EventChannels.class)
+//@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class TxnManager {
 
 	private final EventChannels channels;
@@ -56,7 +61,8 @@ public class TxnManager {
 	private JobRequest jobRequest;
 	private UUID globalTxnId;
 
-	public TxnManager(EventChannels channels, TxnRepository repository, StateMachineFactory factory) {
+	public TxnManager(EventChannels channels, TxnRepository repository
+			, StateMachineFactory factory) {
 		this.channels = channels;
 		this.repository = repository;
 		this.factory = factory;
@@ -93,6 +99,7 @@ public class TxnManager {
 	}
 
 	// cancel a file txn
+	@StatesOnTransition (source = {JobState.FILE_SUBMIT, JobState.DB_CANCEL}, target = JobState.FILE_CANCEL)
 	public void handleFileCancelAction(StateContext<JobState, JobEvent> stateContext) {
 		FileCancelRequest request = new FileCancelRequest();
 		request.setGlobalTxnId(getGlobalTxnId());
@@ -117,6 +124,7 @@ public class TxnManager {
 	}
 
 	// cancel a db txn
+	@StatesOnTransition (source = {JobState.DB_SUBMIT, JobState.BC_CANCEL}, target = JobState.DB_CANCEL)
 	public void handleDbCancelAction(StateContext<JobState, JobEvent> stateContext) {
 		DBCancelRequest request = new DBCancelRequest();
 		request.setGlobalTxnId(getGlobalTxnId());
@@ -140,6 +148,7 @@ public class TxnManager {
 	}
 
 	// cancel a bc txn
+	@StatesOnTransition (source = JobState.BC_SUBMIT, target = JobState.BC_CANCEL)
 	public void handleBcCancelAction(StateContext<JobState, JobEvent> stateContext) {
 		BCCancelRequest request = new BCCancelRequest();
 		request.setGlobalTxnId(getGlobalTxnId());
@@ -151,6 +160,42 @@ public class TxnManager {
 		channels.bcRequest().send(message);
 	}
 
+	// end job successfully
+	@StatesOnTransition (source = JobState.BC_SUBMIT, target = JobState.JOB_COMPLETE)
+	public void handleCompleteJob(StateContext<JobState, JobEvent> stateContext) {
+		Transaction transaction = repository
+				.findTransactionByJobIdAndTxnId(Long.valueOf(jobRequest.getJobId().toString())
+						, jobRequest.getGlobalTxnId().toString());
+		transaction.setJobTxnStatus(JobState.JOB_COMPLETE.toString());
+		transaction.setJobEndTS(new Timestamp(System.currentTimeMillis()));
+		repository.save(transaction);
+	}
+
+	// fail job
+	@StatesOnTransition (source = JobState.FILE_CANCEL, target = JobState.JOB_FAIL)
+	public void handleFailJob(StateContext<JobState, JobEvent> stateContext) {
+		Transaction transaction = repository
+				.findTransactionByJobIdAndTxnId(Long.valueOf(jobRequest.getJobId().toString())
+						, jobRequest.getGlobalTxnId().toString());
+		transaction.setJobTxnStatus(JobState.JOB_FAIL.toString());
+		transaction.setJobEndTS(new Timestamp(System.currentTimeMillis()));
+		repository.save(transaction);
+	}
+
+	//------------------------------------------------
+	// handle txn responses
+	//------------------------------------------------
+
+	@StreamListener(target = EventChannels.TXN_RESPONSE
+			, condition = "headers['saga_response']=='FILE_SUBMIT_COMPLETE'")
+	public void handleSubmitFile(@Valid FileTxnResponse response) {
+		// todo: you can use the resposne payload for any purpose
+
+	}
+
+	//------------------------------------------------
+	// auxiliaries
+	//------------------------------------------------
 	private void persistNewTransaction() {
 		Transaction txn = new Transaction();
 		txn.setJobId(Long.valueOf(jobRequest.getJobId().toString()));

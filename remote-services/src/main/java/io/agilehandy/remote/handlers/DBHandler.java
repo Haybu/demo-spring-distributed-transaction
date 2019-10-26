@@ -25,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -60,8 +61,7 @@ public class DBHandler {
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_SUBMIT_COMPLETE) :
 				createDBResponse(request, JobEvent.DB_SUBMIT_FAIL);
-
-		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
+		sendResponse(response);
 	}
 
 	@StreamListener(target = EventChannels.DB_REQUEST
@@ -71,8 +71,14 @@ public class DBHandler {
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_CANCEL_COMPLETE) :
 				createDBResponse(request, JobEvent.DB_CANCEL_FAIL);
+		sendResponse(response);
+	}
 
-		eventChannels.txnResponse().send(MessageBuilder.withPayload(response).build());
+	private void sendResponse(DBTxnResponse response) {
+		Message message = MessageBuilder.withPayload(response)
+				.setHeader("saga_response", response.getResponse())
+				.build();
+		eventChannels.txnResponse().send(message);
 	}
 
 	private DBTxnResponse createDBResponse(DBRequest request, JobEvent result) {
