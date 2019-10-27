@@ -20,6 +20,7 @@ import javax.validation.Valid;
 import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.database.DBRequest;
 import io.agilehandy.commons.api.database.DBTxnResponse;
+import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -32,6 +33,7 @@ import org.springframework.messaging.support.MessageBuilder;
  * @author Haytham Mohamed
  **/
 
+@Log4j2
 @Configuration
 @EnableBinding(EventChannels.class)
 public class DBHandler {
@@ -57,6 +59,7 @@ public class DBHandler {
 	@StreamListener(target = EventChannels.DB_REQUEST
 			, condition = "headers['saga_request']=='DB_SUBMIT'")
 	public void handleSubmitDB(@Valid DBRequest request) {
+		log.info("remote DB service receives submit message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_SUBMIT_COMPLETE) :
@@ -67,6 +70,7 @@ public class DBHandler {
 	@StreamListener(target = EventChannels.DB_REQUEST
 			, condition = "headers['saga_request']=='DB_CANCEL'")
 	public void handleCancelDB(@Valid DBRequest request) {
+		log.info("remote file service receives cancel message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_CANCEL_COMPLETE) :

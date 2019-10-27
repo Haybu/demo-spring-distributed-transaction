@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: saga
+  cloud:
+    stream:
+      binders:
+        fileRequest:
+          destination: file-request
+          producer.headerMode: headers
+          contentType: application/json
+        dbRequest:
+          destination: db-request
+          producer.headerMode: headers
+          contentType: application/json
+        bcRequest:
+          destination: bc-request
+          producer.headerMode: headers
+          contentType: application/json
+        txnResponse:
+          destination: txn-response
+          producer.headerMode: headers
+          contentType: application/json
+          group: txn-response-group

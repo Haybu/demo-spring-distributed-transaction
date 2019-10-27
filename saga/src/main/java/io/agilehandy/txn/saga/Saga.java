@@ -61,11 +61,10 @@ public class Saga {
 	private DBSubmitRequest dbSubmitRequest;
 	private BCSubmitRequest bcSubmitRequest;
 
-	public Saga() {
-		this(null, null);
-	}
+	private Saga() { this (null, null);}
 
 	public Saga(JobRepository jobRepository, StateMachineFactory factory) {
+		log.info("A new saga is instantiated.");
 		this.jobRepository = jobRepository;
 		this.factory = factory;
 	}
@@ -78,6 +77,7 @@ public class Saga {
 	}
 
 	public void orchestrate() {
+		log.info("saga orchestration starts.");
 		UUID txnId = UUID.randomUUID();
 		fileSubmitRequest.setGlobalTxnId(txnId);
 		dbSubmitRequest.setGlobalTxnId(txnId);
@@ -87,13 +87,13 @@ public class Saga {
 	}
 
 	// start by submitting the file
-	private void start(long jobId, String txnId) {
-		signalStateMachine(jobId, txnId.toString(), fileSubmitRequest, "JOB_TXN_START");
+	private void start(String jobId, String txnId) {
+		signalStateMachine(jobId, txnId.toString(), fileSubmitRequest, JobEvent.JOB_TXN_START);
 	}
 
 	private Job createJob(FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
 		Job txn = new Job();
-		txn.setJobId(Long.valueOf(fs.getJobId().toString()));
+		txn.setJobId(fs.getJobId().toString());
 		txn.setTxnId(fs.getGlobalTxnId().toString());
 		txn.setJobState(JobState.JOB_START.name());
 		txn.setFileId(fs.getFileId().toString());
@@ -103,8 +103,9 @@ public class Saga {
 		return jobRepository.save(txn);
 	}
 
-	public StateMachine<JobState,JobEvent> signalStateMachine(Long jobId, String txnId
-			, JobRequest request, String signal) {
+	public StateMachine<JobState,JobEvent> signalStateMachine(String jobId, String txnId
+			, JobRequest request, JobEvent signal) {
+		log.info("machine signal sent: " + signal);
 		StateMachine<JobState,JobEvent> sm = build(jobId, txnId);
 		sm.getExtendedState().getVariables().put("request", request);
 		Message message = MessageBuilder.withPayload(signal)
@@ -115,15 +116,15 @@ public class Saga {
 		return sm;
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='FILE_SUBMIT_COMPLETE'")
 	public void handleFileSubmitComplete(@Valid FileTxnResponse response) {
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,dbSubmitRequest, "FILE_SUBMIT_COMPLETE");
+				,dbSubmitRequest, JobEvent.FILE_SUBMIT_COMPLETE);
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='FILE_SUBMIT_FAIL'")
 	public void handleFileSubmitFail(@Valid FileTxnResponse response) {
 		FileCancelRequest fileCancelRequest = new FileCancelRequest();
@@ -131,22 +132,22 @@ public class Saga {
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		fileCancelRequest.setFilename(response.getFilename());
 		fileCancelRequest.setFileId(response.getFileId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,fileCancelRequest, "FILE_SUBMIT_FAIL");
+				,fileCancelRequest, JobEvent.FILE_SUBMIT_FAIL);
 
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='FILE_CANCEL_COMPLETE'")
 	public void handleFileCancelComplete(@Valid FileTxnResponse response) {
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,null, "FILE_CANCEL_COMPLETE");
+				,null, JobEvent.FILE_CANCEL_COMPLETE);
 	}
 
 	// TODO: needs a continuous timer action in the state machine transition
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='FILE_CANCEL_FAIL'")
 	public void handleFileCancelFail(@Valid FileTxnResponse response) {
 		FileCancelRequest fileCancelRequest = new FileCancelRequest();
@@ -154,34 +155,34 @@ public class Saga {
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		fileCancelRequest.setFilename(response.getFilename());
 		fileCancelRequest.setFileId(response.getFileId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,fileCancelRequest, "FILE_CANCEL_FAIL");
+				,fileCancelRequest, JobEvent.FILE_CANCEL_FAIL);
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='DB_SUBMIT_COMPLETE'")
 	public void handleDBSubmitComplete(@Valid DBTxnResponse response) {
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,bcSubmitRequest, "DB_SUBMIT_COMPLETE");
+				,bcSubmitRequest, JobEvent.DB_SUBMIT_COMPLETE);
 
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='DB_SUBMIT_FAIL'")
 	public void handleDBSubmitFail(@Valid DBTxnResponse response) {
 		DBCancelRequest dbCancelRequest = new DBCancelRequest();
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		dbCancelRequest.setRecordId(response.getRecordId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,dbCancelRequest, "DB_SUBMIT_FAIL");
+				,dbCancelRequest, JobEvent.DB_SUBMIT_FAIL);
 
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='DB_CANCEL_COMPLETE'")
 	public void handleDBCancelComplete(@Valid DBTxnResponse response) {
 		FileCancelRequest fileCancelRequest = new FileCancelRequest();
@@ -189,84 +190,85 @@ public class Saga {
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		fileCancelRequest.setFilename(fileSubmitRequest.getFilename());
 		fileCancelRequest.setFileId(fileSubmitRequest.getFileId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,fileCancelRequest, "DB_CANCEL_COMPLETE");
+				,fileCancelRequest, JobEvent.DB_CANCEL_COMPLETE);
 
 	}
 
 	// TODO: needs a continuous timer action in the state machine transition
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='DB_CANCEL_FAIL'")
 	public void handleDBCancelFail(@Valid DBTxnResponse response) {
 		DBCancelRequest dbCancelRequest = new DBCancelRequest();
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		dbCancelRequest.setRecordId(response.getRecordId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,dbCancelRequest, "DB_CANCEL_FAIL");
+				,dbCancelRequest, JobEvent.DB_CANCEL_FAIL);
 
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='BC_SUBMIT_COMPLETE'")
 	public void handleBCSubmitComplete(@Valid BCTxnResponse response) {
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,null, "BC_SUBMIT_COMPLETE");
+				,null, JobEvent.BC_SUBMIT_COMPLETE);
 
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='BC_SUBMIT_FAIL'")
 	public void handleBCSubmitFail(@Valid BCTxnResponse response) {
 		BCCancelRequest bcCancelRequest = new BCCancelRequest();
 		bcCancelRequest.setJobId(response.getJobId());
 		bcCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		bcCancelRequest.setContentId(response.getContentId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,bcCancelRequest, "BC_SUBMIT_FAIL");
+				,bcCancelRequest, JobEvent.BC_SUBMIT_FAIL);
 	}
 
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='BC_CANCEL_COMPLETE'")
 	public void handleBCCancelComplete(@Valid BCTxnResponse response) {
 		DBCancelRequest dbCancelRequest = new DBCancelRequest();
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		dbCancelRequest.setRecordId(dbSubmitRequest.getRecordId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,dbCancelRequest, "BC_SUBMIT_FAIL");
+				,dbCancelRequest, JobEvent.BC_CANCEL_COMPLETE);
 	}
 
 	// TODO: needs a continuous timer action in the state machine transition
-	@StreamListener(target = EventChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE
 			, condition = "headers['saga_response']=='BC_CANCEL_FAIL'")
 	public void handleBCCancelFail(@Valid BCTxnResponse response) {
 		BCCancelRequest bcCancelRequest = new BCCancelRequest();
 		bcCancelRequest.setJobId(response.getJobId());
 		bcCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		bcCancelRequest.setContentId(response.getContentId());
-		signalStateMachine(Long.valueOf(response.getJobId().toString())
+		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
-				,bcCancelRequest, "BC_CANCEL_FAIL");
+				,bcCancelRequest, JobEvent.BC_CANCEL_FAIL);
 	}
 
-	private StateMachine<JobState, JobEvent> build(Long jobId, String txnId) {
+	private StateMachine<JobState, JobEvent> build(String jobId, String txnId) {
 		Job job = jobRepository.findTransactionByJobIdAndTxnId(jobId, txnId);
 		StateMachine<JobState,JobEvent> machine = factory.getStateMachine(UUID.fromString(txnId));
-		machine.stopReactively().block();
+		machine.stopReactively().subscribe();
 		machine.getStateMachineAccessor()
 				.doWithAllRegions(sma -> {
 					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<JobState,JobEvent>(){
 
 						@Override
 						public void preStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
-							long tempJobId = Long.class.cast(message.getHeaders().getOrDefault("orderId", -1L));
+							String tempJobId = String.class.cast(message.getHeaders().getOrDefault("jobId", ""));
 							String tempTxnId = String.class.cast(message.getHeaders().getOrDefault("txnId", ""));
+							log.info("State machine interceptor accessing Job with jobId = "+tempJobId+" and txnId = "+tempTxnId);
 							Job tempJob = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
 							tempJob.setJobState(state.getId().name());
 							jobRepository.save(tempJob);
@@ -275,6 +277,8 @@ public class Saga {
 
 					sma.resetStateMachine(new DefaultStateMachineContext(job.getJobState(), null, null,null));
 				});
+		machine.startReactively().subscribe();
+		log.info("state machine built is at state: " + machine.getState().getId().name());
 		return machine;
 	}
 

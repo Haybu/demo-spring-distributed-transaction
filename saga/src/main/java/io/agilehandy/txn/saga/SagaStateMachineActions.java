@@ -39,10 +39,10 @@ import org.springframework.statemachine.annotation.WithStateMachine;
 @WithStateMachine( id = "saga-machine")
 public class SagaStateMachineActions {
 
-	private final EventChannels channels;
+	private final SagaChannels channels;
 	private final JobRepository repository;
 
-	public SagaStateMachineActions(EventChannels channels, JobRepository repository) {
+	public SagaStateMachineActions(SagaChannels channels, JobRepository repository) {
 		this.channels = channels;
 		this.repository = repository;
 	}
@@ -50,6 +50,7 @@ public class SagaStateMachineActions {
 	// submit a file txn
 	@StatesOnTransition(source = JobState.JOB_START, target = JobState.FILE_SUBMIT)
 	public void handleFileSubmitAction(StateContext<JobState, JobEvent> stateContext) {
+		log.info("state machine transits from JOB_START to FILE_SUBMIT");
 		FileSubmitRequest request =
 				(FileSubmitRequest) stateContext.getExtendedState().getVariables().get("request");
 		Message message = MessageBuilder.withPayload(request)
@@ -61,6 +62,7 @@ public class SagaStateMachineActions {
 	// cancel a file txn
 	@StatesOnTransition (source = {JobState.FILE_SUBMIT, JobState.DB_CANCEL}, target = JobState.FILE_CANCEL)
 	public void handleFileCancelAction(StateContext<JobState, JobEvent> stateContext) {
+		log.info("state machine transits from FILE_SUBMIT or DB_CANCEL to FILE_CANCEL");
 		FileCancelRequest request =
 				(FileCancelRequest) stateContext.getExtendedState().getVariables().get("request");
 		Message message = MessageBuilder.withPayload(request)
@@ -72,6 +74,7 @@ public class SagaStateMachineActions {
 	// submit a db record: send a message request
 	@StatesOnTransition (source = JobState.FILE_SUBMIT, target = JobState.DB_SUBMIT)
 	public void handleDbSubmitAction(StateContext<JobState, JobEvent> stateContext) {
+		log.info("state machine transits from FILE_SUBMIT to DB_SUBMIT");
 		DBSubmitRequest request =
 				(DBSubmitRequest) stateContext.getExtendedState().getVariables().get("request");
 		Message message = MessageBuilder.withPayload(request)
@@ -83,6 +86,7 @@ public class SagaStateMachineActions {
 	// cancel a db txn
 	@StatesOnTransition (source = {JobState.DB_SUBMIT, JobState.BC_CANCEL}, target = JobState.DB_CANCEL)
 	public void handleDbCancelAction(StateContext<JobState, JobEvent> stateContext) {
+		log.info("state machine transits from DB_SUBMIT or BC_CANCEL to DB_CANCEL");
 		DBCancelRequest request =
 				(DBCancelRequest) stateContext.getExtendedState().getVariables().get("request");
 		Message message = MessageBuilder.withPayload(request)
@@ -94,6 +98,7 @@ public class SagaStateMachineActions {
 	// submit a bc record: send a message request
 	@StatesOnTransition (source = JobState.DB_SUBMIT, target = JobState.BC_SUBMIT)
 	public void handleBcSubmitAction(StateContext<JobState, JobEvent> stateContext) {
+		log.info("state machine transits from DB_SUBMIT to BC_SUBMIT");
 		BCSubmitRequest request =
 				(BCSubmitRequest) stateContext.getExtendedState().getVariables().get("request");
 		Message message = MessageBuilder.withPayload(request)
@@ -105,6 +110,7 @@ public class SagaStateMachineActions {
 	// cancel a bc txn
 	@StatesOnTransition (source = JobState.BC_SUBMIT, target = JobState.BC_CANCEL)
 	public void handleBcCancelAction(StateContext<JobState, JobEvent> stateContext) {
+		log.info("state machine transits from BC_SUBMIT to BC_CANCEL");
 		BCCancelRequest request =
 				(BCCancelRequest) stateContext.getExtendedState().getVariables().get("request");
 		Message message = MessageBuilder.withPayload(request)

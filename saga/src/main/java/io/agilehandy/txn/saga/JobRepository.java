@@ -17,7 +17,7 @@ package io.agilehandy.txn.saga;
 
 import org.springframework.data.repository.CrudRepository;
 
-public interface JobRepository extends CrudRepository<Job, Long> {
+public interface JobRepository extends CrudRepository<Job, String> {
 
-	public Job findTransactionByJobIdAndTxnId(Long jobId, String txnId);
+	public Job findTransactionByJobIdAndTxnId(String jobId, String txnId);
 }

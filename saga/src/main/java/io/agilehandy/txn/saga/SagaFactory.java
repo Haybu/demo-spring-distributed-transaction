@@ -28,11 +28,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class SagaFactory implements ApplicationContextAware {
 
-	private static ApplicationContext applicationContext;
+	private ApplicationContext applicationContext;
 
 	private SagaFactory() {}
 
-	public static Saga getSaga() {
+	public Saga getSaga() {
 		JobRepository jobRepository = applicationContext.getBean(JobRepository.class);
 		StateMachineFactory stateMachineFactory = applicationContext.getBean(StateMachineFactory.class);
 		return new Saga(jobRepository, stateMachineFactory);

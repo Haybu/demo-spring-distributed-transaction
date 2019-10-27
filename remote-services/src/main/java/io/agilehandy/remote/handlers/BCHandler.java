@@ -20,6 +20,7 @@ import javax.validation.Valid;
 import io.agilehandy.commons.api.blockchain.BCRequest;
 import io.agilehandy.commons.api.blockchain.BCTxnResponse;
 import io.agilehandy.commons.api.jobs.JobEvent;
+import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -32,6 +33,7 @@ import org.springframework.messaging.support.MessageBuilder;
  * @author Haytham Mohamed
  **/
 
+@Log4j2
 @Configuration
 @EnableBinding(EventChannels.class)
 public class BCHandler {
@@ -57,6 +59,7 @@ public class BCHandler {
 	@StreamListener(target = EventChannels.BC_REQUEST
 			, condition = "headers['saga_request']=='BC_SUBMIT'")
 	public void  handleSubmitBC(@Valid BCRequest request) {
+		log.info("remote bc service receives submit message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_SUBMIT_COMPLETE) :
@@ -67,6 +70,7 @@ public class BCHandler {
 	@StreamListener(target = EventChannels.BC_REQUEST
 			, condition = "headers['saga_request']=='BC_CANCEL'")
 	public void handleCancelBC(@Valid BCRequest request) {
+		log.info("remote bc service receives cancel message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_CANCEL_COMPLETE) :

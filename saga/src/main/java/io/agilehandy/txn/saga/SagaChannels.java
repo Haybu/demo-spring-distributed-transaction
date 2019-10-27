@@ -26,23 +26,25 @@ import org.springframework.messaging.SubscribableChannel;
  * @author Haytham Mohamed
  **/
 
-public interface EventChannels {
+public interface SagaChannels {
 
-	String FILE_REQUEST = "file_request";
-	String DB_REQUEST = "db_request";
-	String BC_REQUEST = "bc_request";
+	String FILE_REQUEST = "fileRequest";
+	String DB_REQUEST = "dbRequest";
+	String BC_REQUEST = "bcRequest";
 
-	String TXN_RESPONSE = "txn_response";
+	String TXN_RESPONSE = "txnResponse";
 
-	@Input(FILE_REQUEST)
-	SubscribableChannel fileRequest();
+	@Output(FILE_REQUEST)
+	MessageChannel fileRequest();
 
-	@Input(DB_REQUEST)
-	SubscribableChannel dbRequest();
+	@Output(DB_REQUEST)
+	MessageChannel dbRequest();
 
-	@Input(BC_REQUEST)
-	SubscribableChannel bcRequest();
+	@Output(BC_REQUEST)
+	MessageChannel bcRequest();
 
-	@Output(TXN_RESPONSE)
-	MessageChannel txnResponse();
+	@Input(TXN_RESPONSE)
+	SubscribableChannel txnResponse();
+
+
 }

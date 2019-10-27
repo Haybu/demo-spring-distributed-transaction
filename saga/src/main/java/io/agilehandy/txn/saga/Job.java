@@ -37,7 +37,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class Job {
 
 	@Id
-	private Long jobId;
+	private String jobId;
 
 	private String txnId;
 
