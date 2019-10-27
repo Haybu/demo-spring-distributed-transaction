@@ -15,8 +15,6 @@
  */
 package io.agilehandy.txn.saga;
 
-import java.sql.Timestamp;
-
 import io.agilehandy.commons.api.blockchain.BCCancelRequest;
 import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.database.DBCancelRequest;
@@ -115,8 +113,9 @@ public class SagaStateMachineActions {
 		channels.bcRequest().send(message);
 	}
 
+	/**
 	// end job successfully
-	@StatesOnTransition (source = JobState.BC_SUBMIT, target = JobState.JOB_COMPLETE)
+	//@StatesOnTransition (source = JobState.BC_SUBMIT, target = JobState.JOB_COMPLETE)
 	public void handleCompleteJob(StateContext<JobState, JobEvent> stateContext) {
 		String jobId =
 				(String) stateContext.getExtendedState().getVariables().get("jobId");
@@ -126,7 +125,7 @@ public class SagaStateMachineActions {
 	}
 
 	// fail job
-	@StatesOnTransition (source = JobState.FILE_CANCEL, target = JobState.JOB_FAIL)
+	//@StatesOnTransition (source = JobState.FILE_CANCEL, target = JobState.JOB_FAIL)
 	public void handleFailJob(StateContext<JobState, JobEvent> stateContext) {
 		String jobId =
 				(String) stateContext.getExtendedState().getVariables().get("jobId");
@@ -141,5 +140,6 @@ public class SagaStateMachineActions {
 		transaction.setEndTS(new Timestamp(System.currentTimeMillis()));
 		repository.save(transaction);
 	}
+	 */
 
 }

@@ -41,6 +41,10 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.state.State;
+import org.springframework.statemachine.support.DefaultStateMachineContext;
+import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
+import org.springframework.statemachine.transition.Transition;
 
 /**
  * @author Haytham Mohamed
@@ -252,9 +256,25 @@ public class Saga {
 	}
 
 	private StateMachine<JobState, JobEvent> build(Long jobId, String txnId) {
-		Job txn = jobRepository.findTransactionByJobIdAndTxnId(jobId, txnId);
+		Job job = jobRepository.findTransactionByJobIdAndTxnId(jobId, txnId);
 		StateMachine<JobState,JobEvent> machine = factory.getStateMachine(UUID.fromString(txnId));
-		// TODO: reset to current txn state and add a listener to update state in db in pre state change
+		machine.stopReactively().block();
+		machine.getStateMachineAccessor()
+				.doWithAllRegions(sma -> {
+					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<JobState,JobEvent>(){
+
+						@Override
+						public void preStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
+							long tempJobId = Long.class.cast(message.getHeaders().getOrDefault("orderId", -1L));
+							String tempTxnId = String.class.cast(message.getHeaders().getOrDefault("txnId", ""));
+							Job tempJob = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
+							tempJob.setJobState(state.getId().name());
+							jobRepository.save(tempJob);
+						}
+					});
+
+					sma.resetStateMachine(new DefaultStateMachineContext(job.getJobState(), null, null,null));
+				});
 		return machine;
 	}
 
