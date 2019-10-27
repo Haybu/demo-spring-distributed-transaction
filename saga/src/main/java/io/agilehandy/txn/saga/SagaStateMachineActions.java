@@ -26,8 +26,6 @@ import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.commons.api.storage.FileCancelRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.txn.annotations.StatesOnTransition;
-import io.agilehandy.txn.job.Job;
-import io.agilehandy.txn.job.JobRepository;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.messaging.Message;

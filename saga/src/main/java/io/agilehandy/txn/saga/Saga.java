@@ -32,12 +32,10 @@ import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.commons.api.storage.FileCancelRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.commons.api.storage.FileTxnResponse;
-import io.agilehandy.txn.job.Job;
-import io.agilehandy.txn.job.JobRepository;
+import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
-import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -48,8 +46,8 @@ import org.springframework.statemachine.config.StateMachineFactory;
  * @author Haytham Mohamed
  **/
 
+@Data
 @Log4j2
-@EnableBinding(EventChannels.class)
 public class Saga {
 
 	private final JobRepository jobRepository;
@@ -59,9 +57,20 @@ public class Saga {
 	private DBSubmitRequest dbSubmitRequest;
 	private BCSubmitRequest bcSubmitRequest;
 
+	public Saga() {
+		this(null, null);
+	}
+
 	public Saga(JobRepository jobRepository, StateMachineFactory factory) {
 		this.jobRepository = jobRepository;
 		this.factory = factory;
+	}
+
+	public void orchestrate(FileSubmitRequest fsr, DBSubmitRequest dbr, BCSubmitRequest bcr) {
+		fileSubmitRequest = fsr;
+		dbSubmitRequest = dbr;
+		bcSubmitRequest = bcr;
+		orchestrate();
 	}
 
 	public void orchestrate() {
@@ -247,30 +256,6 @@ public class Saga {
 		StateMachine<JobState,JobEvent> machine = factory.getStateMachine(UUID.fromString(txnId));
 		// TODO: reset to current txn state and add a listener to update state in db in pre state change
 		return machine;
-	}
-
-	FileSubmitRequest getFileSubmitRequest() {
-		return fileSubmitRequest;
-	}
-
-	void setFileSubmitRequest(FileSubmitRequest fileSubmitRequest) {
-		this.fileSubmitRequest = fileSubmitRequest;
-	}
-
-	DBSubmitRequest getDbSubmitRequest() {
-		return dbSubmitRequest;
-	}
-
-	void setDbSubmitRequest(DBSubmitRequest dbSubmitRequest) {
-		this.dbSubmitRequest = dbSubmitRequest;
-	}
-
-	BCSubmitRequest getBcSubmitRequest() {
-		return bcSubmitRequest;
-	}
-
-	void setBcSubmitRequest(BCSubmitRequest bcSubmitRequest) {
-		this.bcSubmitRequest = bcSubmitRequest;
 	}
 
 }
