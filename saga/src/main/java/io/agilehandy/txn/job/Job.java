@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.saga.txn;
+package io.agilehandy.txn.job;
 
 import java.util.Date;
 
@@ -25,48 +25,49 @@ import javax.persistence.TemporalType;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * @author Haytham Mohamed
  **/
 
-@Entity (name = "transactions")
+@Entity (name = "jobs")
 @Data
 @NoArgsConstructor
-public class Transaction {
+public class Job {
 
 	@Id
 	private Long jobId;
 
 	private String txnId;
 
-	private String jobTxnStatus;
+	private String jobState;
 
 	@CreationTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date jobStartTS;
+	private Date startTS;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date jobEndTS;
+	private Date endTS;
+
+	@UpdateTimestamp
+	@Temporal(TemporalType.TIMESTAMP)
+	private Date updatedTS;
 
 	private String fileId;
-	private String fileName;
 	private String fileTxnStatus;
-
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date fileStatusTS;
+	private Date fileTxnStatusTS;
 
 	private String dbRecordId;
 	private String dbTxnStatus;
-
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date dbStatusTS;
+	private Date dbTxnStatusTS;
 
 	private String bcRecordId;
 	private String bcTxnStatus;
-
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date bcStatusTS;
+	private Date bcTxnStatusTS;
 }
 
 

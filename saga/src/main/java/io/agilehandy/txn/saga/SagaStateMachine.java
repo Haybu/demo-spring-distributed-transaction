@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.saga.txn;
+package io.agilehandy.txn.saga;
 
 import java.util.EnumSet;
 
@@ -37,7 +37,7 @@ import org.springframework.statemachine.state.State;
 
 @EnableStateMachineFactory(contextEvents = false)
 @Log4j2
-public class TxnStateMachine
+public class SagaStateMachine
 		extends EnumStateMachineConfigurerAdapter<JobState, JobEvent> {
 
 	@Override

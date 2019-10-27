@@ -17,9 +17,10 @@ package io.agilehandy.commons.api.blockchain;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.jobs.JobRequest;
 import io.agilehandy.commons.api.jobs.JobState;
 
-public interface BCRequest {
+public interface BCRequest extends JobRequest {
 
 	JobState getRequest();
 	UUID getGlobalTxnId();

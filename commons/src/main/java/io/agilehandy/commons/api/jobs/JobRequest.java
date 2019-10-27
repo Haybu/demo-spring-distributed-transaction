@@ -15,30 +15,5 @@
  */
 package io.agilehandy.commons.api.jobs;
 
-import java.util.UUID;
-
-import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
-import io.agilehandy.commons.api.database.DBSubmitRequest;
-import io.agilehandy.commons.api.storage.FileSubmitRequest;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * @author Haytham Mohamed
- **/
-
-@Data
-@NoArgsConstructor
-public class JobRequest {
-
-	private JobState request = JobState.JOB_START;
-
-	private UUID globalTxnId;
-
-	private UUID jobId;
-
-	private FileSubmitRequest fileRequest;
-	private DBSubmitRequest dbRequest;
-	private BCSubmitRequest bcRequest;
-
+public interface JobRequest {
 }

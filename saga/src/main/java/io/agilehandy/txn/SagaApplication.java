@@ -1,4 +1,4 @@
-package io.agilehandy.saga;
+package io.agilehandy.txn;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
