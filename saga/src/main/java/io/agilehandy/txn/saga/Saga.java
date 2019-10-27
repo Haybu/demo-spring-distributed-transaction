@@ -262,6 +262,7 @@ public class Saga {
 		machine.stopReactively().subscribe();
 		machine.getStateMachineAccessor()
 				.doWithAllRegions(sma -> {
+
 					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<JobState,JobEvent>(){
 
 						@Override
@@ -274,6 +275,7 @@ public class Saga {
 							jobRepository.save(tempJob);
 						}
 					});
+
 
 					sma.resetStateMachine(new DefaultStateMachineContext(job.getJobState(), null, null,null));
 				});
