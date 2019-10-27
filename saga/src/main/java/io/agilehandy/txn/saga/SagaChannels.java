@@ -28,23 +28,22 @@ import org.springframework.messaging.SubscribableChannel;
 
 public interface SagaChannels {
 
-	String FILE_REQUEST = "fileRequest";
-	String DB_REQUEST = "dbRequest";
-	String BC_REQUEST = "bcRequest";
+	String FILE_REQUEST_OUT = "fileRequestOut";
+	String DB_REQUEST_OUT = "dbRequestOut";
+	String BC_REQUEST_OUT = "bcRequestOut";
+	String TXN_RESPONSE_IN = "txnResponseIn";
 
-	String TXN_RESPONSE = "txnResponse";
+	@Output(FILE_REQUEST_OUT)
+	MessageChannel fileRequestOut();
 
-	@Output(FILE_REQUEST)
-	MessageChannel fileRequest();
+	@Output(DB_REQUEST_OUT)
+	MessageChannel dbRequestOut();
 
-	@Output(DB_REQUEST)
-	MessageChannel dbRequest();
+	@Output(BC_REQUEST_OUT)
+	MessageChannel bcRequestOut();
 
-	@Output(BC_REQUEST)
-	MessageChannel bcRequest();
-
-	@Input(TXN_RESPONSE)
-	SubscribableChannel txnResponse();
+	@Input(TXN_RESPONSE_IN)
+	SubscribableChannel txnResponseIn();
 
 
 }

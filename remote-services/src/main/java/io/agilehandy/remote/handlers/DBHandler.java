@@ -15,11 +15,11 @@
  */
 package io.agilehandy.remote.handlers;
 
-import javax.validation.Valid;
-
-import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.database.DBCancelRequest;
 import io.agilehandy.commons.api.database.DBRequest;
+import io.agilehandy.commons.api.database.DBSubmitRequest;
 import io.agilehandy.commons.api.database.DBTxnResponse;
+import io.agilehandy.commons.api.jobs.JobEvent;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +27,7 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -56,9 +57,9 @@ public class DBHandler {
 		this.eventChannels = eventChannels;
 	}
 
-	@StreamListener(target = EventChannels.DB_REQUEST
+	@StreamListener(target = EventChannels.DB_REQUEST_IN
 			, condition = "headers['saga_request']=='DB_SUBMIT'")
-	public void handleSubmitDB(@Valid DBRequest request) {
+	public void handleSubmitDB(@Payload DBSubmitRequest request) {
 		log.info("remote DB service receives submit message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		DBTxnResponse response = (result)?
@@ -67,9 +68,9 @@ public class DBHandler {
 		sendResponse(response);
 	}
 
-	@StreamListener(target = EventChannels.DB_REQUEST
+	@StreamListener(target = EventChannels.DB_REQUEST_IN
 			, condition = "headers['saga_request']=='DB_CANCEL'")
-	public void handleCancelDB(@Valid DBRequest request) {
+	public void handleCancelDB(@Payload DBCancelRequest request) {
 		log.info("remote file service receives cancel message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		DBTxnResponse response = (result)?
@@ -82,7 +83,7 @@ public class DBHandler {
 		Message message = MessageBuilder.withPayload(response)
 				.setHeader("saga_response", response.getResponse())
 				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponseOut().send(message);
 	}
 
 	private DBTxnResponse createDBResponse(DBRequest request, JobEvent result) {

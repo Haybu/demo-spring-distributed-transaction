@@ -28,21 +28,20 @@ import org.springframework.messaging.SubscribableChannel;
 
 public interface EventChannels {
 
-	String FILE_REQUEST = "fileRequest";
-	String DB_REQUEST = "dbRequest";
-	String BC_REQUEST = "bcRequest";
+	String FILE_REQUEST_IN = "fileRequestIn";
+	String DB_REQUEST_IN = "dbRequestIn";
+	String BC_REQUEST_IN = "bcRequestIn";
+	String TXN_RESPONSE_OUT = "txnResponseOut";
 
-	String TXN_RESPONSE = "txnResponse";
+	@Input(FILE_REQUEST_IN)
+	SubscribableChannel fileRequestIn();
 
-	@Input(FILE_REQUEST)
-	SubscribableChannel fileRequest();
+	@Input(DB_REQUEST_IN)
+	SubscribableChannel dbRequestIn();
 
-	@Input(DB_REQUEST)
-	SubscribableChannel dbRequest();
+	@Input(BC_REQUEST_IN)
+	SubscribableChannel bcRequestIn();
 
-	@Input(BC_REQUEST)
-	SubscribableChannel bcRequest();
-
-	@Output(TXN_RESPONSE)
-	MessageChannel txnResponse();
+	@Output(TXN_RESPONSE_OUT)
+	MessageChannel txnResponseOut();
 }

@@ -29,14 +29,13 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.annotation.WithStateMachine;
 
 /**
  * @author Haytham Mohamed
  **/
 
 @Log4j2
-@WithStateMachine( id = "saga-machine")
+//@WithStateMachine( id = "saga-machine")
 public class SagaStateMachineActions {
 
 	private final SagaChannels channels;
@@ -56,7 +55,7 @@ public class SagaStateMachineActions {
 		Message message = MessageBuilder.withPayload(request)
 				.setHeader("saga_request", "FILE_SUBMIT")
 				.build();
-		channels.fileRequest().send(message);
+		channels.fileRequestOut().send(message);
 	}
 
 	// cancel a file txn
@@ -68,7 +67,7 @@ public class SagaStateMachineActions {
 		Message message = MessageBuilder.withPayload(request)
 				.setHeader("saga_request", "FILE_CANCEL")
 				.build();
-		channels.fileRequest().send(message);
+		channels.fileRequestOut().send(message);
 	}
 
 	// submit a db record: send a message request
@@ -80,7 +79,7 @@ public class SagaStateMachineActions {
 		Message message = MessageBuilder.withPayload(request)
 				.setHeader("saga_request", "DB_SUBMIT")
 				.build();
-		channels.dbRequest().send(message);
+		channels.dbRequestOut().send(message);
 	}
 
 	// cancel a db txn
@@ -92,7 +91,7 @@ public class SagaStateMachineActions {
 		Message message = MessageBuilder.withPayload(request)
 				.setHeader("saga_request", "DB_CANCEL")
 				.build();
-		channels.dbRequest().send(message);
+		channels.dbRequestOut().send(message);
 	}
 
 	// submit a bc record: send a message request
@@ -104,7 +103,7 @@ public class SagaStateMachineActions {
 		Message message = MessageBuilder.withPayload(request)
 				.setHeader("saga_request", "BC_SUBMIT")
 				.build();
-		channels.bcRequest().send(message);
+		channels.bcRequestOut().send(message);
 	}
 
 	// cancel a bc txn
@@ -116,7 +115,7 @@ public class SagaStateMachineActions {
 		Message message = MessageBuilder.withPayload(request)
 				.setHeader("saga_request", "BC_CANCEL")
 				.build();
-		channels.bcRequest().send(message);
+		channels.bcRequestOut().send(message);
 	}
 
 	/**

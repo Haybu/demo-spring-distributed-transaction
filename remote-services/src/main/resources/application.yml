@@ -3,24 +3,24 @@ spring:
     name: remote-services
   cloud:
     stream:
-      binders:
-        fileRequest:
-          destination: file-request
-          producer.headerMode: headers
+      bindings:
+        fileRequestIn:
+          destination: storage
           contentType: application/json
-          group: file-requests-group
-        dbRequest:
-          destination: db-request
-          producer.headerMode: headers
+          consumer.headerMode: headers
+          group: storage-group
+        dbRequestIn:
+          destination: database
           contentType: application/json
-          group: db-requests-group
-        bcRequest:
-          destination: bc-request
-          producer.headerMode: headers
+          consumer.headerMode: headers
+          group: database-group
+        bcRequestIn:
+          destination: blockchain
           contentType: application/json
-          group: bc-requests-group
-        txnResponse:
-          destination: txn-response
+          consumer.headerMode: headers
+          group: blockchain-group
+        txnResponseOut:
+          destination: saga
           producer.headerMode: headers
           contentType: application/json
 

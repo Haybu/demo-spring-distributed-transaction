@@ -15,9 +15,9 @@
  */
 package io.agilehandy.remote.handlers;
 
-import javax.validation.Valid;
-
+import io.agilehandy.commons.api.blockchain.BCCancelRequest;
 import io.agilehandy.commons.api.blockchain.BCRequest;
+import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.blockchain.BCTxnResponse;
 import io.agilehandy.commons.api.jobs.JobEvent;
 import lombok.extern.log4j.Log4j2;
@@ -27,6 +27,7 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -56,9 +57,9 @@ public class BCHandler {
 		this.eventChannels = eventChannels;
 	}
 
-	@StreamListener(target = EventChannels.BC_REQUEST
+	@StreamListener(target = EventChannels.BC_REQUEST_IN
 			, condition = "headers['saga_request']=='BC_SUBMIT'")
-	public void  handleSubmitBC(@Valid BCRequest request) {
+	public void  handleSubmitBC(@Payload BCSubmitRequest request) {
 		log.info("remote bc service receives submit message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		BCTxnResponse response = (result)?
@@ -67,9 +68,9 @@ public class BCHandler {
 		sendResponse(response);
 	}
 
-	@StreamListener(target = EventChannels.BC_REQUEST
+	@StreamListener(target = EventChannels.BC_REQUEST_IN
 			, condition = "headers['saga_request']=='BC_CANCEL'")
-	public void handleCancelBC(@Valid BCRequest request) {
+	public void handleCancelBC(@Payload BCCancelRequest request) {
 		log.info("remote bc service receives cancel message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		BCTxnResponse response = (result)?
@@ -82,7 +83,7 @@ public class BCHandler {
 		Message message = MessageBuilder.withPayload(response)
 				.setHeader("saga_response", response.getResponse())
 				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponseOut().send(message);
 	}
 
 	private BCTxnResponse createBCResponse(BCRequest request, JobEvent result) {

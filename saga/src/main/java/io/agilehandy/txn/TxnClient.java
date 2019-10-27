@@ -21,7 +21,6 @@ import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.database.DBSubmitRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.txn.saga.Saga;
-import io.agilehandy.txn.saga.SagaFactory;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -34,11 +33,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class TxnClient implements ApplicationRunner {
 
-	private final SagaFactory sagaFactory;
+	private final Saga saga;
 
-	public TxnClient(SagaFactory sagaFactory) {
-		this.sagaFactory = sagaFactory;
+	public TxnClient(Saga saga) {
+		this.saga = saga;
 	}
+
 
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
@@ -61,8 +61,6 @@ public class TxnClient implements ApplicationRunner {
 		request3.setJobId(jobId);
 		request3.setContent("some bc content".getBytes());
 		request3.setContentId(UUID.randomUUID());
-
-		Saga saga = sagaFactory.getSaga();
 
 		saga.orchestrate(request1, request2, request3);
 

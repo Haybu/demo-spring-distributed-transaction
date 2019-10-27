@@ -3,21 +3,21 @@ spring:
     name: saga
   cloud:
     stream:
-      binders:
-        fileRequest:
-          destination: file-request
+      bindings:
+        fileRequestOut:
+          destination: storage
           producer.headerMode: headers
           contentType: application/json
-        dbRequest:
-          destination: db-request
+        dbRequestOut:
+          destination: database
           producer.headerMode: headers
           contentType: application/json
-        bcRequest:
-          destination: bc-request
+        bcRequestOut:
+          destination: blockchain
           producer.headerMode: headers
           contentType: application/json
-        txnResponse:
-          destination: txn-response
-          producer.headerMode: headers
+        txnResponseIn:
+          destination: saga
           contentType: application/json
-          group: txn-response-group
+          consumer.headerMode: headers
+          group: saga-group

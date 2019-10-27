@@ -19,13 +19,12 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * @author Haytham Mohamed
  **/
 
-@Component
+//@Component
 public class SagaFactory implements ApplicationContextAware {
 
 	private ApplicationContext applicationContext;

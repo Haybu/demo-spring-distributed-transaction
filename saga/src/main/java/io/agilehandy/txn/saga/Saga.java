@@ -18,8 +18,6 @@ package io.agilehandy.txn.saga;
 import java.sql.Timestamp;
 import java.util.UUID;
 
-import javax.validation.Valid;
-
 import io.agilehandy.commons.api.blockchain.BCCancelRequest;
 import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.blockchain.BCTxnResponse;
@@ -34,10 +32,11 @@ import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.commons.api.storage.FileTxnResponse;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
-import reactor.core.publisher.Mono;
 
+import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
@@ -52,6 +51,7 @@ import org.springframework.statemachine.transition.Transition;
 
 @Data
 @Log4j2
+@EnableBinding(SagaChannels.class)
 public class Saga {
 
 	private final JobRepository jobRepository;
@@ -112,21 +112,23 @@ public class Saga {
 				.setHeader("jobId", jobId)
 				.setHeader("txnId", txnId)
 				.build();
-		sm.sendEvent(Mono.just(message)).subscribe();
+		sm.sendEvent(message);
 		return sm;
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='FILE_SUBMIT_COMPLETE'")
-	public void handleFileSubmitComplete(@Valid FileTxnResponse response) {
+	public void handleFileSubmitComplete(@Payload FileTxnResponse response) {
+		log.info("Saga receives response from remote file service with signal FILE_SUBMIT_COMPLETE");
 		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
 				,dbSubmitRequest, JobEvent.FILE_SUBMIT_COMPLETE);
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='FILE_SUBMIT_FAIL'")
-	public void handleFileSubmitFail(@Valid FileTxnResponse response) {
+	public void handleFileSubmitFail(@Payload FileTxnResponse response) {
+		log.info("Saga receives response from remote file service with signal FILE_SUBMIT_FAIL");
 		FileCancelRequest fileCancelRequest = new FileCancelRequest();
 		fileCancelRequest.setJobId(response.getJobId());
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -138,18 +140,20 @@ public class Saga {
 
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='FILE_CANCEL_COMPLETE'")
-	public void handleFileCancelComplete(@Valid FileTxnResponse response) {
+	public void handleFileCancelComplete(@Payload FileTxnResponse response) {
+		log.info("Saga receives response from remote file service with signal FILE_CANCEL_COMPLETE");
 		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
 				,null, JobEvent.FILE_CANCEL_COMPLETE);
 	}
 
 	// TODO: needs a continuous timer action in the state machine transition
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='FILE_CANCEL_FAIL'")
-	public void handleFileCancelFail(@Valid FileTxnResponse response) {
+	public void handleFileCancelFail(@Payload FileTxnResponse response) {
+		log.info("Saga receives response from remote file service with signal FILE_CANCEL_FAIL");
 		FileCancelRequest fileCancelRequest = new FileCancelRequest();
 		fileCancelRequest.setJobId(response.getJobId());
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -160,18 +164,20 @@ public class Saga {
 				,fileCancelRequest, JobEvent.FILE_CANCEL_FAIL);
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='DB_SUBMIT_COMPLETE'")
-	public void handleDBSubmitComplete(@Valid DBTxnResponse response) {
+	public void handleDBSubmitComplete(@Payload DBTxnResponse response) {
+		log.info("Saga receives response from remote database service with signal DB_SUBMIT_COMPLETE");
 		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
 				,bcSubmitRequest, JobEvent.DB_SUBMIT_COMPLETE);
 
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='DB_SUBMIT_FAIL'")
-	public void handleDBSubmitFail(@Valid DBTxnResponse response) {
+	public void handleDBSubmitFail(@Payload DBTxnResponse response) {
+		log.info("Saga receives response from remote database service with signal DB_SUBMIT_FAIL");
 		DBCancelRequest dbCancelRequest = new DBCancelRequest();
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -182,9 +188,10 @@ public class Saga {
 
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='DB_CANCEL_COMPLETE'")
-	public void handleDBCancelComplete(@Valid DBTxnResponse response) {
+	public void handleDBCancelComplete(@Payload DBTxnResponse response) {
+		log.info("Saga receives response from remote database service with signal DB_CANCEL_COMPLETE");
 		FileCancelRequest fileCancelRequest = new FileCancelRequest();
 		fileCancelRequest.setJobId(response.getJobId());
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -197,9 +204,10 @@ public class Saga {
 	}
 
 	// TODO: needs a continuous timer action in the state machine transition
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='DB_CANCEL_FAIL'")
-	public void handleDBCancelFail(@Valid DBTxnResponse response) {
+	public void handleDBCancelFail(@Payload DBTxnResponse response) {
+		log.info("Saga receives response from remote database service with signal DB_CANCEL_FAIL");
 		DBCancelRequest dbCancelRequest = new DBCancelRequest();
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -210,18 +218,20 @@ public class Saga {
 
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='BC_SUBMIT_COMPLETE'")
-	public void handleBCSubmitComplete(@Valid BCTxnResponse response) {
+	public void handleBCSubmitComplete(@Payload BCTxnResponse response) {
+		log.info("Saga receives response from remote database service with signal BC_SUBMIT_COMPLETE");
 		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
 				,null, JobEvent.BC_SUBMIT_COMPLETE);
 
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='BC_SUBMIT_FAIL'")
-	public void handleBCSubmitFail(@Valid BCTxnResponse response) {
+	public void handleBCSubmitFail(@Payload BCTxnResponse response) {
+		log.info("Saga receives response from remote blockchain service with signal BC_SUBMIT_FAIL");
 		BCCancelRequest bcCancelRequest = new BCCancelRequest();
 		bcCancelRequest.setJobId(response.getJobId());
 		bcCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -231,9 +241,10 @@ public class Saga {
 				,bcCancelRequest, JobEvent.BC_SUBMIT_FAIL);
 	}
 
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='BC_CANCEL_COMPLETE'")
-	public void handleBCCancelComplete(@Valid BCTxnResponse response) {
+	public void handleBCCancelComplete(@Payload BCTxnResponse response) {
+		log.info("Saga receives response from remote blockchain service with signal BC_CANCEL_COMPLETE");
 		DBCancelRequest dbCancelRequest = new DBCancelRequest();
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -244,9 +255,10 @@ public class Saga {
 	}
 
 	// TODO: needs a continuous timer action in the state machine transition
-	@StreamListener(target = SagaChannels.TXN_RESPONSE
+	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='BC_CANCEL_FAIL'")
-	public void handleBCCancelFail(@Valid BCTxnResponse response) {
+	public void handleBCCancelFail(@Payload BCTxnResponse response) {
+		log.info("Saga receives response from remote blockchain service with signal BC_CANCEL_FAIL");
 		BCCancelRequest bcCancelRequest = new BCCancelRequest();
 		bcCancelRequest.setJobId(response.getJobId());
 		bcCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
@@ -257,30 +269,33 @@ public class Saga {
 	}
 
 	private StateMachine<JobState, JobEvent> build(String jobId, String txnId) {
+		log.info("Building a machine");
 		Job job = jobRepository.findTransactionByJobIdAndTxnId(jobId, txnId);
+		log.info("job in DB has status = " + job.getJobState());
 		StateMachine<JobState,JobEvent> machine = factory.getStateMachine(UUID.fromString(txnId));
-		machine.stopReactively().subscribe();
+		machine.stop();
+
 		machine.getStateMachineAccessor()
 				.doWithAllRegions(sma -> {
 
-					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<JobState,JobEvent>(){
+					sma.resetStateMachine(new DefaultStateMachineContext(job.getJobState(), null, null,null));
 
+					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<JobState,JobEvent>(){
 						@Override
 						public void preStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
+							log.info("state machine built is at state: " + stateMachine.getState().getId().name());
 							String tempJobId = String.class.cast(message.getHeaders().getOrDefault("jobId", ""));
 							String tempTxnId = String.class.cast(message.getHeaders().getOrDefault("txnId", ""));
 							log.info("State machine interceptor accessing Job with jobId = "+tempJobId+" and txnId = "+tempTxnId);
 							Job tempJob = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
+							log.info(">>>> setting job to state: " + state.getId().name());////////
 							tempJob.setJobState(state.getId().name());
 							jobRepository.save(tempJob);
 						}
 					});
-
-
-					sma.resetStateMachine(new DefaultStateMachineContext(job.getJobState(), null, null,null));
 				});
-		machine.startReactively().subscribe();
-		log.info("state machine built is at state: " + machine.getState().getId().name());
+		machine.start();
+
 		return machine;
 	}
 

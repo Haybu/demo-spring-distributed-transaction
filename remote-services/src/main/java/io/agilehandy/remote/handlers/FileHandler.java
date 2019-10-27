@@ -15,10 +15,10 @@
  */
 package io.agilehandy.remote.handlers;
 
-import javax.validation.Valid;
-
 import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.storage.FileCancelRequest;
 import io.agilehandy.commons.api.storage.FileRequest;
+import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.commons.api.storage.FileTxnResponse;
 import lombok.extern.log4j.Log4j2;
 
@@ -27,6 +27,7 @@ import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 
 /**
@@ -56,9 +57,9 @@ public class FileHandler {
 		this.eventChannels = eventChannels;
 	}
 
-	@StreamListener(target = EventChannels.FILE_REQUEST
+	@StreamListener(target = EventChannels.FILE_REQUEST_IN
 			, condition = "headers['saga_request']=='FILE_SUBMIT'")
-	public void handleSubmitFile(@Valid FileRequest request) {
+	public void handleSubmitFile(@Payload FileSubmitRequest request) {
 		log.info("remote file service receives submit message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
 		FileTxnResponse response = (result)?
@@ -67,9 +68,9 @@ public class FileHandler {
 		sendResponse(response);
 	}
 
-	@StreamListener(target = EventChannels.FILE_REQUEST
+	@StreamListener(target = EventChannels.FILE_REQUEST_IN
 			, condition = "headers['saga_request']=='FILE_CANCEL'")
-	public void handleCancelFile(@Valid FileRequest request) {
+	public void handleCancelFile(@Payload FileCancelRequest request) {
 		log.info("remote file service receives cancel message to process");
 		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
 		FileTxnResponse response = (result)?
@@ -82,7 +83,7 @@ public class FileHandler {
 		Message message = MessageBuilder.withPayload(response)
 				.setHeader("saga_response", response.getResponse())
 				.build();
-		eventChannels.txnResponse().send(message);
+		eventChannels.txnResponseOut().send(message);
 	}
 
 	private FileTxnResponse createFileResponse(FileRequest request, JobEvent result) {
