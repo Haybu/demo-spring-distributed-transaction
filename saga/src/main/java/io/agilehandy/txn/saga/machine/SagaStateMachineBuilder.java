@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.txn.saga;
+package io.agilehandy.txn.saga.machine;
 
-import org.springframework.data.repository.CrudRepository;
+import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.jobs.JobState;
 
-public interface JobRepository extends CrudRepository<Job, String> {
+import org.springframework.statemachine.StateMachine;
 
-	public Job findTransactionByJobIdAndTxnId(String jobId, String txnId);
+/**
+ * @author Haytham Mohamed
+ **/
+public interface SagaStateMachineBuilder {
+
+	StateMachine<JobState, JobEvent> build(String jobId, String txnId, boolean isFirstEvent);
+
 }
