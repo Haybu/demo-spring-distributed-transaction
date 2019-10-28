@@ -33,8 +33,10 @@ import io.agilehandy.commons.api.storage.FileTxnResponse;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.context.annotation.Scope;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
@@ -53,6 +55,7 @@ import org.springframework.statemachine.transition.Transition;
 @Data
 @Log4j2
 @EnableBinding(SagaChannels.class)
+@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Saga {
 
 	InMemoryStateMachinePersist stateMachinePersist = new InMemoryStateMachinePersist();
