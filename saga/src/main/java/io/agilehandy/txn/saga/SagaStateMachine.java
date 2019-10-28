@@ -50,10 +50,12 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 
 	private final SagaChannels channels;
 	private final JobRepository repository;
+	private final SagaStateMachineMonitor monitor;
 
-	public SagaStateMachine(SagaChannels channels, JobRepository repository) {
+	public SagaStateMachine(SagaChannels channels, JobRepository repository, SagaStateMachineMonitor monitor) {
 		this.channels = channels;
 		this.repository = repository;
+		this.monitor = monitor;
 	}
 
 	// build manually
@@ -87,10 +89,12 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 
 		};
 
-		config.withConfiguration()
+		config
+			.withConfiguration()
 				.autoStartup(false)
 				//.machineId("saga-machine")
 				.listener(listener)
+			.and().withMonitoring().monitor(monitor)
 				;
 	}
 
