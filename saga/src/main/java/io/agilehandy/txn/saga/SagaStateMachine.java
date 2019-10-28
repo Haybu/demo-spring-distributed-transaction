@@ -37,15 +37,16 @@ import org.springframework.statemachine.config.builders.StateMachineTransitionCo
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 import org.springframework.statemachine.state.State;
+import org.springframework.stereotype.Component;
 
 /**
  * @author Haytham Mohamed
  **/
 
 @EnableStateMachineFactory(contextEvents = false)
+@Component
 @Log4j2
-public class SagaStateMachine
-		extends EnumStateMachineConfigurerAdapter<JobState, JobEvent> {
+public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState, JobEvent> {
 
 	private final SagaChannels channels;
 	private final JobRepository repository;
@@ -54,6 +55,17 @@ public class SagaStateMachine
 		this.channels = channels;
 		this.repository = repository;
 	}
+
+	// build manually
+	/**
+	public StateMachine<JobState, JobEvent> buildStateMachine() throws Exception {
+		StateMachineBuilder.Builder<JobState, JobEvent> builder = StateMachineBuilder.builder();
+		configure(builder.configureConfiguration());
+		configure(builder.configureStates());
+		configure(builder.configureTransitions());
+		return builder.build();
+	}
+	 */
 
 	@Override
 	public void configure(StateMachineConfigurationConfigurer<JobState, JobEvent> config) throws Exception {
@@ -72,11 +84,12 @@ public class SagaStateMachine
 			public void stateMachineStopped(StateMachine stateMachine) {
 				log.info("[listener] State machine stopped");
 			}
+
 		};
 
 		config.withConfiguration()
 				.autoStartup(false)
-				.machineId("saga-machine")
+				//.machineId("saga-machine")
 				.listener(listener)
 				;
 	}

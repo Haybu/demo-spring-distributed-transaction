@@ -18,7 +18,6 @@ package io.agilehandy.txn.saga;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.statemachine.config.StateMachineFactory;
 
 /**
  * @author Haytham Mohamed
@@ -29,6 +28,7 @@ public class SagaFactory implements ApplicationContextAware {
 
 	private ApplicationContext applicationContext;
 
+	/**
 	private SagaFactory() {}
 
 	public Saga getSaga() {
@@ -36,6 +36,7 @@ public class SagaFactory implements ApplicationContextAware {
 		StateMachineFactory stateMachineFactory = applicationContext.getBean(StateMachineFactory.class);
 		return new Saga(jobRepository, stateMachineFactory);
 	}
+	 */
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {

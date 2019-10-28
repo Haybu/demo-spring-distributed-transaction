@@ -40,8 +40,9 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.statemachine.state.State;
-import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.statemachine.support.StateMachineInterceptorAdapter;
 import org.springframework.statemachine.transition.Transition;
 
@@ -54,6 +55,9 @@ import org.springframework.statemachine.transition.Transition;
 @EnableBinding(SagaChannels.class)
 public class Saga {
 
+	InMemoryStateMachinePersist stateMachinePersist = new InMemoryStateMachinePersist();
+	StateMachinePersister<JobState, JobEvent, String> persister = new DefaultStateMachinePersister<>(stateMachinePersist);
+
 	private final JobRepository jobRepository;
 	private final StateMachineFactory factory;
 
@@ -64,9 +68,9 @@ public class Saga {
 	private Saga() { this (null, null);}
 
 	public Saga(JobRepository jobRepository, StateMachineFactory factory) {
+		this.factory = factory;
 		log.info("A new saga is instantiated.");
 		this.jobRepository = jobRepository;
-		this.factory = factory;
 	}
 
 	public void orchestrate(FileSubmitRequest fsr, DBSubmitRequest dbr, BCSubmitRequest bcr) {
@@ -105,8 +109,9 @@ public class Saga {
 
 	public StateMachine<JobState,JobEvent> signalStateMachine(String jobId, String txnId
 			, JobRequest request, JobEvent signal) {
-		log.info("machine signal sent: " + signal);
-		StateMachine<JobState,JobEvent> sm = build(jobId, txnId);
+		boolean isFirstCall = (signal == JobEvent.JOB_TXN_START);
+		StateMachine<JobState,JobEvent> sm = build(jobId, txnId, isFirstCall);
+		log.info("machine signal to send is " + signal + " to machine at state " + sm.getState().getId().name());
 		sm.getExtendedState().getVariables().put("request", request);
 		Message message = MessageBuilder.withPayload(signal)
 				.setHeader("jobId", jobId)
@@ -268,34 +273,52 @@ public class Saga {
 				,bcCancelRequest, JobEvent.BC_CANCEL_FAIL);
 	}
 
-	private StateMachine<JobState, JobEvent> build(String jobId, String txnId) {
+	private StateMachine<JobState, JobEvent> build(String jobId, String txnId, boolean isFirstEvent) {
 		log.info("Building a machine");
-		Job job = jobRepository.findTransactionByJobIdAndTxnId(jobId, txnId);
-		log.info("job in DB has status = " + job.getJobState());
+
 		StateMachine<JobState,JobEvent> machine = factory.getStateMachine(UUID.fromString(txnId));
 		machine.stop();
 
+		if (!isFirstEvent) {
+			try {
+				log.info("Restoring a machine ");
+				persister.restore(machine, txnId);
+			}
+			catch (Exception e) {
+				log.error("Error restoring a state machine " + e);
+			}
+		}
+
 		machine.getStateMachineAccessor()
 				.doWithAllRegions(sma -> {
-
-					sma.resetStateMachine(new DefaultStateMachineContext(job.getJobState(), null, null,null));
-
 					sma.addStateMachineInterceptor(new StateMachineInterceptorAdapter<JobState,JobEvent>(){
 						@Override
 						public void preStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
-							log.info("state machine built is at state: " + stateMachine.getState().getId().name());
+							//log.info("[interceptor] state machine built is at state: " + stateMachine.getState().getId().name());
 							String tempJobId = String.class.cast(message.getHeaders().getOrDefault("jobId", ""));
 							String tempTxnId = String.class.cast(message.getHeaders().getOrDefault("txnId", ""));
-							log.info("State machine interceptor accessing Job with jobId = "+tempJobId+" and txnId = "+tempTxnId);
-							Job tempJob = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
-							log.info(">>>> setting job to state: " + state.getId().name());////////
-							tempJob.setJobState(state.getId().name());
-							jobRepository.save(tempJob);
+							log.info("[interceptor] state machine interceptor accessing Job with jobId = "+tempJobId+" and txnId = "+tempTxnId);
+							Job job = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
+							log.info("[interceptor] setting job to state: " + state.getId().name());
+							job.setJobState(state.getId().name());
+							jobRepository.save(job);
+						}
+
+						@Override
+						public void postStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
+							try {
+								persister.persist(stateMachine, txnId);
+							}
+							catch (Exception e) {
+								log.error("cannot persist a state machine for txnId " + txnId);
+							}
 						}
 					});
 				});
+
 		machine.start();
 
+		log.info("machine is now ready with state " + machine.getState().getId().name());
 		return machine;
 	}
 

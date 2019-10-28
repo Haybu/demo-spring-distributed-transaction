@@ -86,7 +86,6 @@
 		<module>commons</module>
 		<module>remote-services</module>
 		<module>saga</module>
-		<module>client</module>
 	</modules>
 
 
