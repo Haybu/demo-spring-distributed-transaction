@@ -148,18 +148,18 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 
 				.and().withExternal()   // if DB submit fails
 					.source(JobState.DB_SUBMIT)
-					.source(JobState.DB_CANCEL)
+					.target(JobState.DB_CANCEL)
 					.event(JobEvent.DB_SUBMIT_FAIL)
 					//.action(context -> handleDbCancelAction(context))
 				.and().withExternal()
 					.source(JobState.DB_CANCEL)
-					.source(JobState.FILE_CANCEL)
+					.target(JobState.FILE_CANCEL)
 					.event(JobEvent.DB_CANCEL_COMPLETE)
 					//.action(context -> handleFileCancelAction(context) )
 
 				.and().withExternal()  // if BC submit fails
 					.source(JobState.BC_SUBMIT)
-					.source(JobState.BC_CANCEL)
+					.target(JobState.BC_CANCEL)
 					.event(JobEvent.BC_SUBMIT_FAIL)
 					//.action(context -> handleBcCancelAction(context))
 				.and().withExternal()

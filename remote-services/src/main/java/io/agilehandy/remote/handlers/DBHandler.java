@@ -42,11 +42,17 @@ public class DBHandler {
 	@Value("${db.max}")
 	private int max;
 
-	@Value("${db.higherBound}")
-	private int higherBound;
+	@Value("${db.submit_higher_bound}")
+	private int submitHigherBound;
 
-	@Value("${db.lowerBound}")
-	private int lowerBound;
+	@Value("${db.submit_lower_bound}")
+	private int submitLowerBound;
+
+	@Value("${db.cancel_higher_bound}")
+	private int cancelHigherBound;
+
+	@Value("${db.cancel_lower_bound}")
+	private int cancelLowerBound;
 
 	@Value("${db.delay}")
 	private int delay;
@@ -60,8 +66,8 @@ public class DBHandler {
 	@StreamListener(target = EventChannels.DB_REQUEST_IN
 			, condition = "headers['saga_request']=='DB_SUBMIT'")
 	public void handleSubmitDB(@Payload DBSubmitRequest request) {
-		log.info("remote DB service receives submit message to process");
-		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
+		log.info("remote database service receives submit message to process");
+		boolean result = Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay);
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_SUBMIT_COMPLETE) :
 				createDBResponse(request, JobEvent.DB_SUBMIT_FAIL);
@@ -71,8 +77,8 @@ public class DBHandler {
 	@StreamListener(target = EventChannels.DB_REQUEST_IN
 			, condition = "headers['saga_request']=='DB_CANCEL'")
 	public void handleCancelDB(@Payload DBCancelRequest request) {
-		log.info("remote file service receives cancel message to process");
-		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
+		log.info("remote database service receives cancel message to process");
+		boolean result = Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1);
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_CANCEL_COMPLETE) :
 				createDBResponse(request, JobEvent.DB_CANCEL_FAIL);

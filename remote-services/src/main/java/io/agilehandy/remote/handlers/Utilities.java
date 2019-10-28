@@ -25,13 +25,12 @@ public class Utilities {
 	public static boolean simulateTxn(int max, int lowerBound, int higherBound
 			, int maxSecondsToDelay) {
 		int randomInteger = new Random().nextInt(max);
+		delay(maxSecondsToDelay);
 
 		if (randomInteger > lowerBound && randomInteger < higherBound) {
-			delay(maxSecondsToDelay);
 			return false;
 		}
 
-		delay(maxSecondsToDelay);
 		return true;
 	}
 

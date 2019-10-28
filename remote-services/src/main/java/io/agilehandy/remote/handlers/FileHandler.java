@@ -42,11 +42,17 @@ public class FileHandler {
 	@Value("${file.max}")
 	private int max;
 
-	@Value("${file.higherBound}")
-	private int higherBound;
+	@Value("${file.submit_higher_bound}")
+	private int submitHigherBound;
 
-	@Value("${file.lowerBound}")
-	private int lowerBound;
+	@Value("${file.submit_lower_bound}")
+	private int submitLowerBound;
+
+	@Value("${file.cancel_higher_bound}")
+	private int cancelHigherBound;
+
+	@Value("${file.cancel_lower_bound}")
+	private int cancelLowerBound;
 
 	@Value("${file.delay}")
 	private int delay;
@@ -61,7 +67,7 @@ public class FileHandler {
 			, condition = "headers['saga_request']=='FILE_SUBMIT'")
 	public void handleSubmitFile(@Payload FileSubmitRequest request) {
 		log.info("remote file service receives submit message to process");
-		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
+		boolean result = Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay);
 		FileTxnResponse response = (result)?
 				createFileResponse(request, JobEvent.FILE_SUBMIT_COMPLETE) :
 				createFileResponse(request, JobEvent.FILE_SUBMIT_FAIL);
@@ -72,7 +78,7 @@ public class FileHandler {
 			, condition = "headers['saga_request']=='FILE_CANCEL'")
 	public void handleCancelFile(@Payload FileCancelRequest request) {
 		log.info("remote file service receives cancel message to process");
-		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
+		boolean result = Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1);
 		FileTxnResponse response = (result)?
 				createFileResponse(request, JobEvent.FILE_CANCEL_COMPLETE) :
 				createFileResponse(request, JobEvent.FILE_CANCEL_FAIL);

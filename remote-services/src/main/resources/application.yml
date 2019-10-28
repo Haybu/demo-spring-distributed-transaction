@@ -29,18 +29,24 @@ spring:
 # delay to simulate number of seconds a txn takes to process a request
 file:
   max: 10
-  lowerBound: 4
-  higherBound: 7
+  submit_lower_bound: 4
+  submit_higher_bound: 7
+  cancel_lower_bound: 4
+  cancel_higher_bound: 7
   delay: 1
 
 db:
   max: 10
-  lowerBound: 3
-  higherBound: 5
+  submit_lower_bound: 3
+  submit_higher_bound: 5
+  cancel_lower_bound: 3
+  cancel_higher_bound: 5
   delay: 1
 
 bc:
   max: 10
-  lowerBound: 4
-  higherBound: 8
+  submit_lower_bound: 4
+  submit_higher_bound: 8
+  cancel_lower_bound: 4
+  cancel_higher_bound: 8
   delay: 2

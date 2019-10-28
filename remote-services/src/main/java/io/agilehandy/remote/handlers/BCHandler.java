@@ -42,11 +42,17 @@ public class BCHandler {
 	@Value("${bc.max}")
 	private int max;
 
-	@Value("${bc.higherBound}")
-	private int higherBound;
+	@Value("${bc.submit_higher_bound}")
+	private int submitHigherBound;
 
-	@Value("${bc.lowerBound}")
-	private int lowerBound;
+	@Value("${bc.submit_lower_bound}")
+	private int submitLowerBound;
+
+	@Value("${bc.cancel_higher_bound}")
+	private int cancelHigherBound;
+
+	@Value("${bc.cancel_lower_bound}")
+	private int cancelLowerBound;
 
 	@Value("${bc.delay}")
 	private int delay;
@@ -60,8 +66,8 @@ public class BCHandler {
 	@StreamListener(target = EventChannels.BC_REQUEST_IN
 			, condition = "headers['saga_request']=='BC_SUBMIT'")
 	public void  handleSubmitBC(@Payload BCSubmitRequest request) {
-		log.info("remote bc service receives submit message to process");
-		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, delay);
+		log.info("remote blockchain service receives submit message to process");
+		boolean result = Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay);
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_SUBMIT_COMPLETE) :
 				createBCResponse(request, JobEvent.BC_SUBMIT_FAIL);
@@ -71,8 +77,8 @@ public class BCHandler {
 	@StreamListener(target = EventChannels.BC_REQUEST_IN
 			, condition = "headers['saga_request']=='BC_CANCEL'")
 	public void handleCancelBC(@Payload BCCancelRequest request) {
-		log.info("remote bc service receives cancel message to process");
-		boolean result = Utilities.simulateTxn(max, lowerBound, higherBound, 1);
+		log.info("remote blockchain service receives cancel message to process");
+		boolean result = Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1);
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_CANCEL_COMPLETE) :
 				createBCResponse(request, JobEvent.BC_CANCEL_FAIL);
