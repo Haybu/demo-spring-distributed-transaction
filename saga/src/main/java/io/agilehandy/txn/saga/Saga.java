@@ -111,8 +111,11 @@ public class Saga {
 			, JobRequest request, JobEvent signal) {
 		boolean isFirstCall = (signal == JobEvent.JOB_TXN_START);
 		StateMachine<JobState,JobEvent> sm = build(jobId, txnId, isFirstCall);
-		log.info("machine signal to send is " + signal + " to machine at state " + sm.getState().getId().name());
-		sm.getExtendedState().getVariables().put("request", request);
+		log.info("machine signal to send is " + signal
+				+ " to machine at state " + sm.getState().getId().name());
+		if (request != null) {
+			sm.getExtendedState().getVariables().put("request", request);
+		}
 		Message message = MessageBuilder.withPayload(signal)
 				.setHeader("jobId", jobId)
 				.setHeader("txnId", txnId)
@@ -226,7 +229,7 @@ public class Saga {
 	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='BC_SUBMIT_COMPLETE'")
 	public void handleBCSubmitComplete(@Payload BCTxnResponse response) {
-		log.info("Saga receives response from remote database service with signal BC_SUBMIT_COMPLETE");
+		log.info("Saga receives response from remote blockchain service with signal BC_SUBMIT_COMPLETE");
 		signalStateMachine(response.getJobId().toString()
 				, response.getGlobalTxnId().toString()
 				,null, JobEvent.BC_SUBMIT_COMPLETE);
