@@ -15,16 +15,66 @@
  */
 package io.agilehandy.txn.saga.machine;
 
+import java.util.UUID;
+
 import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.jobs.JobState;
+import io.agilehandy.txn.saga.job.JobRepository;
+import lombok.extern.log4j.Log4j2;
 
 import org.springframework.statemachine.StateMachine;
+import org.springframework.statemachine.StateMachinePersist;
+import org.springframework.statemachine.config.StateMachineFactory;
+import org.springframework.statemachine.persist.DefaultStateMachinePersister;
+import org.springframework.statemachine.persist.StateMachinePersister;
+import org.springframework.stereotype.Component;
 
 /**
  * @author Haytham Mohamed
  **/
-public interface SagaStateMachineBuilder {
 
-	StateMachine<JobState, JobEvent> build(String jobId, String txnId, boolean isFirstEvent);
+@Log4j2
+@Component
+public class SagaStateMachineBuilder {
+
+	private final StateMachineFactory factory;
+	private final JobRepository jobRepository;
+
+	StateMachinePersister<JobState, JobEvent, String> persister = null;
+
+	public SagaStateMachineBuilder(StateMachineFactory factory
+			, JobRepository jobRepository
+			, StateMachinePersist stateMachinePersist) {  // state machine persist object should be autowired here.
+		this.factory = factory;
+		this.jobRepository = jobRepository;
+		persister = new DefaultStateMachinePersister<>(stateMachinePersist);
+	}
+
+	public StateMachine<JobState, JobEvent> build(String jobId, String txnId, boolean isFirstEvent) {
+		log.info("Building a machine");
+
+		StateMachine<JobState,JobEvent> machine = factory.getStateMachine(UUID.fromString(txnId));
+		machine.stop();
+
+		if (!isFirstEvent) {
+			try {
+				log.info("Restoring a machine ");
+				persister.restore(machine, txnId);
+			}
+			catch (Exception e) {
+				log.error("Error restoring a state machine " + e);
+			}
+		}
+
+		machine.getStateMachineAccessor()
+				.doWithAllRegions(sma ->
+					sma.addStateMachineInterceptor(new SagaStateMachineInterceptor(jobRepository, persister))
+				);
+
+		machine.start();
+
+		log.info("machine is now ready with state " + machine.getState().getId().name());
+		return machine;
+	}
 
 }

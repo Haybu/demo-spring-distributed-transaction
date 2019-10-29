@@ -21,28 +21,38 @@ import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.jobs.JobState;
 import lombok.extern.log4j.Log4j2;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.StateMachinePersist;
+import org.springframework.stereotype.Component;
 
 /**
+ * This is for demo purpose only and should not be used for production.
+ *
  * @author Haytham Mohamed
  **/
-
 @Log4j2
-public class InMemoryStateMachinePersist implements StateMachinePersist<JobState, JobEvent,String> {
+@Profile("!jpa")
+@Component
+public class InMemoryStateMachinePersist
+		implements StateMachinePersist<JobState, JobEvent,String> {
 
-	private final HashMap<String, StateMachineContext<JobState, JobEvent>> contexts = new HashMap<>();
+	private final HashMap<String, StateMachineContext<JobState, JobEvent>> stateMachineRepository
+			= new HashMap<>();
 
 	@Override
-	public void write(StateMachineContext<JobState, JobEvent> context, String key) throws Exception {
-		log.info("[persister] persisting machine with key: " + key + " and state: " + context.getState().name());
-		contexts.put(key, context);
+	public void write(StateMachineContext<JobState, JobEvent> context, String key)
+			throws Exception {
+		log.info("[persister] persisting machine with key: " + key + " and state: "
+				+ context.getState().name());
+		stateMachineRepository.put(key, context);
 	}
 
 	@Override
 	public StateMachineContext<JobState, JobEvent> read(String key) throws Exception {
-		StateMachineContext<JobState, JobEvent> sm = contexts.get(key);
-		log.info("[persister] restoring machine with key: " + key + " and state: " + sm.getState().name());
+		StateMachineContext<JobState, JobEvent> sm = stateMachineRepository.get(key);
+		log.info("[persister] restoring machine with key: " + key + " and state: "
+				+ sm.getState().name());
 		return sm;
 	}
 }

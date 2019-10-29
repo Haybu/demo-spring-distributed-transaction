@@ -20,7 +20,7 @@ import java.util.UUID;
 import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.database.DBSubmitRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
-import io.agilehandy.txn.saga.Saga;
+import io.agilehandy.txn.saga.machine.Saga;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
