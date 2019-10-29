@@ -60,17 +60,6 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 		this.monitor = monitor;
 	}
 
-	// build manually
-	/**
-	public StateMachine<JobState, JobEvent> buildStateMachine() throws Exception {
-		StateMachineBuilder.Builder<JobState, JobEvent> builder = StateMachineBuilder.builder();
-		configure(builder.configureConfiguration());
-		configure(builder.configureStates());
-		configure(builder.configureTransitions());
-		return builder.build();
-	}
-	 */
-
 	@Override
 	public void configure(StateMachineConfigurationConfigurer<JobState, JobEvent> config) throws Exception {
 		StateMachineListener<JobState, JobEvent> listener = new StateMachineListenerAdapter() {

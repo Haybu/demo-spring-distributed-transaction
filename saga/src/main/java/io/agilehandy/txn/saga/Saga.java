@@ -32,7 +32,6 @@ import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.commons.api.storage.FileTxnResponse;
 import io.agilehandy.txn.saga.job.Job;
 import io.agilehandy.txn.saga.job.JobRepository;
-import io.agilehandy.txn.saga.machine.InMemoryStateMachinePersist;
 import io.agilehandy.txn.saga.machine.SagaStateMachineBuilder;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
@@ -45,8 +44,6 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.persist.DefaultStateMachinePersister;
-import org.springframework.statemachine.persist.StateMachinePersister;
 
 /**
  * @author Haytham Mohamed
@@ -57,9 +54,6 @@ import org.springframework.statemachine.persist.StateMachinePersister;
 @EnableBinding(SagaChannels.class)
 @Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Saga {
-
-	InMemoryStateMachinePersist stateMachinePersist = new InMemoryStateMachinePersist();
-	StateMachinePersister<JobState, JobEvent, String> persister = new DefaultStateMachinePersister<>(stateMachinePersist);
 
 	private final JobRepository jobRepository;
 	private final SagaStateMachineBuilder builder;
