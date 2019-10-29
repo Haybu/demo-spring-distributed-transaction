@@ -18,11 +18,9 @@ package io.agilehandy.txn.saga.machine;
 import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.jobs.JobState;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 
 /**
  * @author Haytham Mohamed
@@ -40,10 +38,10 @@ public class JpaSagaMachineBuilder implements SagaStateMachineBuilder {
 	@Profile("jpa")
 	public static class JpaPersisterConfig {
 
-		@Bean
+	/*	@Bean
 		public StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister(
 				JpaStateMachineRepository jpaStateMachineRepository) {
 			return new JpaPersistingStateMachineInterceptor<>(jpaStateMachineRepository);
-		}
+		}*/
 	}
 }

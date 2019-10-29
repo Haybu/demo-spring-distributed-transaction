@@ -176,6 +176,21 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 					.source(JobState.DB_CANCEL)
 					.target(JobState.FILE_CANCEL)
 					.event(JobEvent.DB_CANCEL_COMPLETE)
+
+				.and().withInternal()
+					.source(JobState.FILE_CANCEL)
+					.action(context -> handleFileCancelAction(context))
+					.event(JobEvent.FILE_CANCEL_FAIL)
+
+				.and().withInternal()
+					.source(JobState.DB_CANCEL)
+					.action(context -> handleDbCancelAction(context))
+					.event(JobEvent.DB_CANCEL_FAIL)
+
+				.and().withInternal()
+					.source(JobState.BC_CANCEL)
+					.action(context -> handleBcCancelAction(context))
+					.event(JobEvent.BC_CANCEL_FAIL)
 				;
 	}
 

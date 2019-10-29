@@ -21,3 +21,4 @@ spring:
           contentType: application/json
           consumer.headerMode: headers
           group: saga-group
+

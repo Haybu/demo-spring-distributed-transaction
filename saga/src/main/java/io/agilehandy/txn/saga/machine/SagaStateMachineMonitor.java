@@ -37,7 +37,9 @@ import org.springframework.stereotype.Component;
 public class SagaStateMachineMonitor extends AbstractStateMachineMonitor<JobState, JobEvent> {
 
 	@Override
-	public void transition(StateMachine<JobState, JobEvent> sm, Transition<JobState, JobEvent> trans, long duration) {
+	public void transition(StateMachine<JobState, JobEvent> sm
+			, Transition<JobState, JobEvent> trans
+			, long duration) {
 		if (trans.getSource() == null || trans.getTarget() == null) {
 			return;
 		}
@@ -51,16 +53,14 @@ public class SagaStateMachineMonitor extends AbstractStateMachineMonitor<JobStat
 
 	}
 
+	// leverage to redo if compensation transactions fail
 	@Override
 	public void action(StateMachine<JobState, JobEvent> sm
-			, Function<StateContext<JobState, JobEvent>, Mono<Void>> action, long duration) {
-		Transition<JobState, JobEvent> trans = sm.getTransitions().stream().findFirst().get();
-		String source = trans.getSource().getId().name();
-		String target = trans.getTarget().getId().name();
-		String txnId = sm.getUuid().toString();
+			, Function<StateContext<JobState, JobEvent>, Mono<Void>> action
+			, long duration) {
 
-		log.info("[Monitor] Saga machine with txnId " + txnId
-				+ " takes " + duration + " milliseconds to perform action when moving from "
-				+ source + " to " + target);
+		log.info("Action takes " + duration + " milliseconds "
+				+ " on state " + sm.getState().getId().name());
 	}
+
 }
