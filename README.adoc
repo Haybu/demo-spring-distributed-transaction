@@ -1,0 +1,11 @@
+# Microservices Distributed Transaction Management
+
+This demo project illustrates managing a transaction across
+distributed microservices. 
+
+The implemented Global Transaction Manager (GTM) leverages
+a Spring State Machine to coordinate progression of successful 
+individual local transactions and rollbacks. It also leverages Spring 
+Cloud Stream to integrate with distributed services.
+
+image::./docs/images/Global_Txn_Manager.png[Distributed Transaction Management]

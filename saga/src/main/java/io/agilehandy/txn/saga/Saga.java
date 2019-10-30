@@ -95,15 +95,15 @@ public class Saga {
 	}
 
 	private Job createJob(FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
-		Job txn = new Job();
-		txn.setJobId(fs.getJobId().toString());
-		txn.setTxnId(fs.getGlobalTxnId().toString());
-		txn.setJobState(JobState.JOB_START.name());
-		txn.setFileId(fs.getFileId().toString());
-		txn.setDbRecordId(db.getRecordId().toString());
-		txn.setBcRecordId(bc.getContentId().toString());
-		txn.setStartTS(new Timestamp(System.currentTimeMillis()));
-		return jobRepository.save(txn);
+		Job job = new Job();
+		job.setJobId(fs.getJobId().toString());
+		job.setTxnId(fs.getGlobalTxnId().toString());
+		job.setJobState(JobState.JOB_START.name());
+		job.setFileId(fs.getFileId().toString());
+		job.setDbRecordId(db.getRecordId().toString());
+		job.setBcRecordId(bc.getContentId().toString());
+		job.setStartTS(new Timestamp(System.currentTimeMillis()));
+		return jobRepository.save(job);
 	}
 
 	public StateMachine<JobState,JobEvent> signalStateMachine(String jobId, String txnId
