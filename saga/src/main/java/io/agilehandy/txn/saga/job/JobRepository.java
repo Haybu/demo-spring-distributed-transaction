@@ -15,9 +15,16 @@
  */
 package io.agilehandy.txn.saga.job;
 
+import java.util.Collection;
+
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-public interface JobRepository extends CrudRepository<Job, Long> {
+public interface JobRepository extends CrudRepository<Job, JobKey> {
 
-	public Job findTransactionByJobIdAndTxnId(Long jobId, String txnId);
+	@Query(value = "SELECT * from jobs where id = ?1 and job_state not in ('JOB_COMPLETE','JOB_FAIL','JOB_TIME_OUT')",
+	nativeQuery = true)
+	Collection<Job> findInProgressInstances(Long jobId);
+
+	Collection<Job> findJobsByJobId(Long jobId);
 }

@@ -20,6 +20,7 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.IdClass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -33,6 +34,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  **/
 
 @Entity (name = "jobs")
+@IdClass(JobKey.class)
 @Data
 @NoArgsConstructor
 public class Job {
@@ -42,6 +44,7 @@ public class Job {
 	//@GeneratedValue(strategy= GenerationType.AUTO)
 	private Long jobId;
 
+	@Id
 	private String txnId;
 
 	private String jobState;

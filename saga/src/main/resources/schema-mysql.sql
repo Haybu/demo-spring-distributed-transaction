@@ -1,4 +1,5 @@
 
+
 create table txn.jobs (
     id INT NOT NULL,
     txn_id VARCHAR(100) NOT NULL,
@@ -15,7 +16,7 @@ create table txn.jobs (
 	bc_record_id VARCHAR(100),
 	bc_txn_status VARCHAR(100),
 	bc_txn_status_ts DATE,
-    PRIMARY KEY ( id )
+    PRIMARY KEY ( id, txn_id )
 );
 
 create table txn.state_machine (

@@ -31,3 +31,6 @@ spring:
       hibernate:
         ddl-auto: none
 
+saga:
+  timeout: 30
+

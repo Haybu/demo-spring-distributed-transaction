@@ -16,6 +16,7 @@
 package io.agilehandy.txn.saga;
 
 import java.sql.Timestamp;
+import java.util.Collection;
 import java.util.UUID;
 
 import io.agilehandy.commons.api.blockchain.BCCancelRequest;
@@ -37,6 +38,7 @@ import lombok.Data;
 import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
@@ -65,7 +67,8 @@ public class Saga {
 
 	StateMachine<JobState,JobEvent> currentStateMachine;
 
-	private long timeout = 30l;  // milliseconds (TODO: make passed information)
+	@Value("${saga.timeout}")
+	private long timeout;
 
 	private Saga() {
 		this (null, null);
@@ -105,24 +108,27 @@ public class Saga {
 
 	// checks job transaction DB to make sure there is no inflight txn
 	private boolean canOrchestrate(Long jobId) {
-		Job job = jobRepository.findById(jobId).orElse(null);
-		if (job == null || JobState.valueOf(job.getJobState()) == JobState.JOB_COMPLETE ||
-				JobState.valueOf(job.getJobState()) == JobState.JOB_FAIL) {
-			return true;
-		}
-		return false;
+		Collection<Job> jobs = jobRepository.findInProgressInstances(jobId);
+		return jobs.isEmpty()? true : false;
 	}
 
 	// start by submitting the file
 	private JobState start(Long jobId, String txnId) {
 		signalStateMachine(jobId, txnId, fileSubmitRequest, JobEvent.JOB_TXN_START);
+		long startTimestamp = System.currentTimeMillis();
+		long currentTimestamp = startTimestamp;
 
 		while(!currentStateMachine.isComplete()) {
-			;
+			if (currentTimestamp - startTimestamp > timeout) {
+				log.info("Distributed transaction for job Id " + jobId + " and txn Id " + txnId + " is timed out");
+				signalStateMachine(jobId, txnId, null, JobEvent.JOB_TXN_TIMEOUT);
+			}
+			currentTimestamp = System.currentTimeMillis();
 		}
-
-		return currentStateMachine.getState().getId();
-
+		JobState finalState = currentStateMachine.getState().getId();
+		log.info("Final Transaction state is " + finalState + " completes in "
+				+ (currentTimestamp - startTimestamp) + " milliseconds");
+		return finalState;
 	}
 
 	private Job createJob(FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
@@ -140,9 +146,10 @@ public class Saga {
 	public void signalStateMachine(Long jobId, String txnId
 			, JobExchange request, JobEvent signal) {
 		boolean isFirstCall = (signal == JobEvent.JOB_TXN_START);
-		currentStateMachine = builder.build(String.valueOf(jobId), txnId, isFirstCall);
+		currentStateMachine = builder.getStateMachine(String.valueOf(jobId), txnId, isFirstCall);
 
 		if (currentStateMachine.isComplete()) {
+			log.info("Transaction already existed. No action to take.");
 			return;
 		}
 

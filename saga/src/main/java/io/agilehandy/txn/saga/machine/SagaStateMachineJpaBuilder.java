@@ -41,7 +41,7 @@ public class SagaStateMachineJpaBuilder implements SagaStateMachineBuilder {
 	}
 
 	@Override
-	public StateMachine<JobState, JobEvent> build(String jobId, String txnId, boolean isFirstEvent) {
+	public StateMachine<JobState, JobEvent> getStateMachine(String jobId, String txnId, boolean isFirstEvent) {
 		log.info("Building a machine");
 		StateMachine<JobState,JobEvent> machine = stateMachineService.acquireStateMachine(txnId);
 		if (isFirstEvent) {

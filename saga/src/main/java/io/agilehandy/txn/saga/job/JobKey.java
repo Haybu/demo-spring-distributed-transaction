@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.txn.saga.machine;
+package io.agilehandy.txn.saga.job;
 
-import io.agilehandy.commons.api.jobs.JobEvent;
-import io.agilehandy.commons.api.jobs.JobState;
-
-import org.springframework.statemachine.StateMachine;
+import java.io.Serializable;
 
 /**
  * @author Haytham Mohamed
  **/
-public interface SagaStateMachineBuilder {
 
-	StateMachine<JobState, JobEvent> getStateMachine(String jobId, String txnId, boolean isFirstEvent);
+public class JobKey implements Serializable {
+	Long jobId;
+	String txnId;
+
+	public JobKey() {
+		this(null, null);
+	}
+
+	public JobKey(Long jobId, String txnId) {
+		this.jobId = jobId;
+		this.txnId = txnId;
+	}
 
 }

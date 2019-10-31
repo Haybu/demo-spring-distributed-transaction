@@ -18,6 +18,7 @@ package io.agilehandy.txn.saga.machine;
 import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.txn.saga.job.Job;
+import io.agilehandy.txn.saga.job.JobKey;
 import io.agilehandy.txn.saga.job.JobRepository;
 import lombok.extern.log4j.Log4j2;
 
@@ -48,11 +49,13 @@ public class SagaStateMachineInterceptor extends StateMachineInterceptorAdapter<
 		//log.info("[interceptor] state machine built is at state: " + stateMachine.getState().getId().name());
 		Long tempJobId = Long.class.cast(message.getHeaders().getOrDefault("jobId", ""));
 		String tempTxnId = String.class.cast(message.getHeaders().getOrDefault("txnId", ""));
-		log.info("[interceptor] state machine accesses Job with jobId = " + tempJobId + " and txnId = " + tempTxnId);
-		Job job = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
-		log.info("[interceptor] setting job to state: " + state.getId().name());
-		job.setJobState(state.getId().name());
-		jobRepository.save(job);
+		Job job = jobRepository.findById(new JobKey(tempJobId, tempTxnId)).orElse(null);
+		if (job != null) {
+			job.setJobState(state.getId().name());
+			jobRepository.save(job);
+			log.info("[interceptor] state machine alters job with id " + tempJobId + " to state "
+					+ state.getId().name() + " in transaction " + tempTxnId);
+		}
 	}
 
 	@Override
