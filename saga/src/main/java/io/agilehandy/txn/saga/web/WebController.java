@@ -15,8 +15,6 @@
  */
 package io.agilehandy.txn.saga.web;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.txn.saga.Saga;
 
@@ -39,13 +37,11 @@ public class WebController {
 
 	@PostMapping
 	public TxnResponse runTransaction(@RequestBody TxnRequest request) {
-		UUID txnId = UUID.randomUUID();
 		Long jobId = request.getId();
-		JobState state = saga.orchestrate(jobId, txnId, request.getStorage()
+		JobState state = saga.orchestrate(jobId, request.getStorage()
 				, request.getMetadata(), request.getBlockchain());
 		TxnResponse response = new TxnResponse();
 		response.setJobId(jobId);
-		response.setTxnId(txnId.toString());
 		response.setState(state);
 		return response;
 	}

@@ -80,15 +80,16 @@ public class Saga {
 		this.builder = builder;
 	}
 
-	public JobState orchestrate(Long jobId, UUID txnId, FileSubmitRequest fsr
+	public JobState orchestrate(Long jobId, FileSubmitRequest fsr
 			, DBSubmitRequest dbr, BCSubmitRequest bcr) {
+		UUID txnId = UUID.randomUUID();
 		fileSubmitRequest = fsr;
 		dbSubmitRequest = dbr;
 		bcSubmitRequest = bcr;
 		return orchestrate(jobId, txnId);
 	}
 
-	public JobState orchestrate(Long jobId, UUID txnId) {
+	private JobState orchestrate(Long jobId, UUID txnId) {
 		if (!canOrchestrate(jobId)) {
 			log.info("Cannot run this transaction as same Job with ID " + jobId + " is in progress.");
 			return JobState.JOB_FAIL;

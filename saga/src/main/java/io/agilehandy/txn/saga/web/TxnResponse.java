@@ -28,7 +28,6 @@ import lombok.NoArgsConstructor;
 public class TxnResponse {
 
 	private Long jobId;
-	private String txnId;
 	private JobState state;
 
 }

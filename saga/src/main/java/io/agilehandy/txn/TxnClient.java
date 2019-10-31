@@ -15,8 +15,6 @@
  */
 package io.agilehandy.txn;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.database.DBSubmitRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
@@ -43,7 +41,6 @@ public class TxnClient implements ApplicationRunner {
 	public void run(ApplicationArguments args) throws Exception {
 
 		Long jobId = 123L;
-		UUID txnId = UUID.randomUUID();
 
 		FileSubmitRequest request1 = new FileSubmitRequest();
 		request1.setFileId("file 1");
@@ -59,7 +56,7 @@ public class TxnClient implements ApplicationRunner {
 		request3.setContent("some bc content".getBytes());
 		request3.setContentId("content 1");
 
-		saga.orchestrate(jobId, txnId, request1, request2, request3);
+		saga.orchestrate(jobId, request1, request2, request3);
 
 	}
 }
