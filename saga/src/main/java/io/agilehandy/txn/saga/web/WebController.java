@@ -41,10 +41,7 @@ public class WebController {
 	public TxnResponse runTransaction(@RequestBody TxnRequest request) {
 		UUID txnId = UUID.randomUUID();
 		Long jobId = request.getId();
-		request.getBlockchain().setGlobalTxnId(txnId);
-		request.getStorage().setGlobalTxnId(txnId);
-		request.getMetadata().setGlobalTxnId(txnId);
-		JobState state = saga.orchestrate(jobId, request.getStorage()
+		JobState state = saga.orchestrate(jobId, txnId, request.getStorage()
 				, request.getMetadata(), request.getBlockchain());
 		TxnResponse response = new TxnResponse();
 		response.setJobId(jobId);

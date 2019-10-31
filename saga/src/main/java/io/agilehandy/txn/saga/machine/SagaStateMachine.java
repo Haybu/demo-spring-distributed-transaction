@@ -24,7 +24,6 @@ import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.commons.api.storage.FileCancelRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
 import io.agilehandy.txn.saga.SagaChannels;
-import io.agilehandy.txn.saga.job.JobRepository;
 import lombok.extern.log4j.Log4j2;
 
 import org.springframework.messaging.Message;
@@ -51,12 +50,10 @@ import org.springframework.stereotype.Component;
 public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState, JobEvent> {
 
 	private final SagaChannels channels;
-	private final JobRepository repository;
 	private final SagaStateMachineMonitor monitor;
 
-	public SagaStateMachine(SagaChannels channels, JobRepository repository, SagaStateMachineMonitor monitor) {
+	public SagaStateMachine(SagaChannels channels, SagaStateMachineMonitor monitor) {
 		this.channels = channels;
-		this.repository = repository;
 		this.monitor = monitor;
 	}
 

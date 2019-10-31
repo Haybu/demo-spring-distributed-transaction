@@ -80,22 +80,21 @@ public class Saga {
 		this.builder = builder;
 	}
 
-	public JobState orchestrate(Long jobId, FileSubmitRequest fsr
+	public JobState orchestrate(Long jobId, UUID txnId, FileSubmitRequest fsr
 			, DBSubmitRequest dbr, BCSubmitRequest bcr) {
 		fileSubmitRequest = fsr;
 		dbSubmitRequest = dbr;
 		bcSubmitRequest = bcr;
-		return orchestrate(jobId);
+		return orchestrate(jobId, txnId);
 	}
 
-	public JobState orchestrate(Long jobId) {
+	public JobState orchestrate(Long jobId, UUID txnId) {
 		if (!canOrchestrate(jobId)) {
 			log.info("Cannot run this transaction as same Job with ID " + jobId + " is in progress.");
 			return JobState.JOB_FAIL;
 		}
 
 		log.info("saga orchestration starts.");
-		UUID txnId = UUID.randomUUID();
 		fileSubmitRequest.setGlobalTxnId(txnId);
 		fileSubmitRequest.setJobId(jobId);
 		dbSubmitRequest.setGlobalTxnId(txnId);
@@ -126,7 +125,7 @@ public class Saga {
 			currentTimestamp = System.currentTimeMillis();
 		}
 		JobState finalState = currentStateMachine.getState().getId();
-		log.info("Final Transaction state is " + finalState + " completes in "
+		log.info("Final Transaction state is " + finalState + ". Job completes in "
 				+ (currentTimestamp - startTimestamp) + " milliseconds");
 		return finalState;
 	}
@@ -146,7 +145,7 @@ public class Saga {
 	public void signalStateMachine(Long jobId, String txnId
 			, JobExchange request, JobEvent signal) {
 		boolean isFirstCall = (signal == JobEvent.JOB_TXN_START);
-		currentStateMachine = builder.getStateMachine(String.valueOf(jobId), txnId, isFirstCall);
+		currentStateMachine = builder.getStateMachine(txnId, isFirstCall);
 
 		if (currentStateMachine.isComplete()) {
 			log.info("Transaction already existed. No action to take.");
@@ -154,7 +153,7 @@ public class Saga {
 		}
 
 		log.info("machine signal to send is " + signal
-				+ " to machine at state " + currentStateMachine.getState().getId().name());
+				+ " to machine with state " + currentStateMachine.getState().getId().name());
 		if (request != null) {
 			currentStateMachine.getExtendedState().getVariables().put("request", request);
 		}

@@ -25,6 +25,6 @@ import org.springframework.statemachine.StateMachine;
  **/
 public interface SagaStateMachineBuilder {
 
-	StateMachine<JobState, JobEvent> getStateMachine(String jobId, String txnId, boolean isFirstEvent);
+	StateMachine<JobState, JobEvent> getStateMachine(String txnId, boolean isFirstEvent);
 
 }

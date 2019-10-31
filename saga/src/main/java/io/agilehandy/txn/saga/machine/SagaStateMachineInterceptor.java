@@ -60,7 +60,9 @@ public class SagaStateMachineInterceptor extends StateMachineInterceptorAdapter<
 
 	@Override
 	public void postStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
-		//stateMachineService.releaseStateMachine(stateMachine.getUuid().toString());
-		//stateMachine.stopReactively().block();
+		//if (stateMachine.isComplete()) {
+			//stateMachineService.releaseStateMachine(stateMachine.getId());
+			//stateMachine.stopReactively().block();
+		//}
 	}
 }
