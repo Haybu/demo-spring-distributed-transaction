@@ -37,7 +37,7 @@ spring:
         ddl-auto: none
 
 saga:
-  timeout: 600
+  timeout: 800
 
 
 
