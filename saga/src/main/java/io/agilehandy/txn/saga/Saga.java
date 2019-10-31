@@ -35,6 +35,7 @@ import io.agilehandy.txn.saga.job.JobRepository;
 import io.agilehandy.txn.saga.machine.SagaStateMachineBuilder;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import reactor.core.publisher.Mono;
 
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.cloud.stream.annotation.EnableBinding;
@@ -62,6 +63,10 @@ public class Saga {
 	private DBSubmitRequest dbSubmitRequest;
 	private BCSubmitRequest bcSubmitRequest;
 
+	StateMachine<JobState,JobEvent> currentStateMachine;
+
+	private long timeout = 30l;  // milliseconds (TODO: make passed information)
+
 	private Saga() {
 		this (null, null);
 	}
@@ -72,17 +77,18 @@ public class Saga {
 		this.builder = builder;
 	}
 
-	public void orchestrate(Long jobId, FileSubmitRequest fsr, DBSubmitRequest dbr, BCSubmitRequest bcr) {
+	public JobState orchestrate(Long jobId, FileSubmitRequest fsr
+			, DBSubmitRequest dbr, BCSubmitRequest bcr) {
 		fileSubmitRequest = fsr;
 		dbSubmitRequest = dbr;
 		bcSubmitRequest = bcr;
-		orchestrate(jobId);
+		return orchestrate(jobId);
 	}
 
-	public void orchestrate(Long jobId) {
+	public JobState orchestrate(Long jobId) {
 		if (!canOrchestrate(jobId)) {
 			log.info("Cannot run this transaction as same Job with ID " + jobId + " is in progress.");
-			return;
+			return JobState.JOB_FAIL;
 		}
 
 		log.info("saga orchestration starts.");
@@ -94,7 +100,7 @@ public class Saga {
 		bcSubmitRequest.setGlobalTxnId(txnId);
 		bcSubmitRequest.setJobId(jobId);
 		Job job = createJob(fileSubmitRequest, dbSubmitRequest, bcSubmitRequest);
-		start(job.getJobId(), txnId.toString());
+		return start(job.getJobId(), txnId.toString());
 	}
 
 	// checks job transaction DB to make sure there is no inflight txn
@@ -108,8 +114,15 @@ public class Saga {
 	}
 
 	// start by submitting the file
-	private void start(Long jobId, String txnId) {
-		signalStateMachine(jobId, txnId.toString(), fileSubmitRequest, JobEvent.JOB_TXN_START);
+	private JobState start(Long jobId, String txnId) {
+		signalStateMachine(jobId, txnId, fileSubmitRequest, JobEvent.JOB_TXN_START);
+
+		while(!currentStateMachine.isComplete()) {
+			;
+		}
+
+		return currentStateMachine.getState().getId();
+
 	}
 
 	private Job createJob(FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
@@ -124,22 +137,25 @@ public class Saga {
 		return jobRepository.save(job);
 	}
 
-	public StateMachine<JobState,JobEvent> signalStateMachine(Long jobId, String txnId
+	public void signalStateMachine(Long jobId, String txnId
 			, JobExchange request, JobEvent signal) {
 		boolean isFirstCall = (signal == JobEvent.JOB_TXN_START);
-		StateMachine<JobState,JobEvent> sm =
-				builder.build(String.valueOf(jobId), txnId, isFirstCall);
+		currentStateMachine = builder.build(String.valueOf(jobId), txnId, isFirstCall);
+
+		if (currentStateMachine.isComplete()) {
+			return;
+		}
+
 		log.info("machine signal to send is " + signal
-				+ " to machine at state " + sm.getState().getId().name());
+				+ " to machine at state " + currentStateMachine.getState().getId().name());
 		if (request != null) {
-			sm.getExtendedState().getVariables().put("request", request);
+			currentStateMachine.getExtendedState().getVariables().put("request", request);
 		}
 		Message message = MessageBuilder.withPayload(signal)
 				.setHeader("jobId", jobId)
 				.setHeader("txnId", txnId)
 				.build();
-		sm.sendEvent(message);
-		return sm;
+		currentStateMachine.sendEvent(Mono.just(message)).blockLast();
 	}
 
 	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN

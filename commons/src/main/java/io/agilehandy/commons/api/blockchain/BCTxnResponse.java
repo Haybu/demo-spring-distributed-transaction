@@ -15,8 +15,6 @@
  */
 package io.agilehandy.commons.api.blockchain;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.jobs.JobEvent;
 import io.agilehandy.commons.api.jobs.JobExchange;
 import lombok.Data;
@@ -31,5 +29,5 @@ import lombok.NoArgsConstructor;
 public class BCTxnResponse extends JobExchange {
 
 	private JobEvent response;
-	private UUID contentId;
+	private String contentId;
 }

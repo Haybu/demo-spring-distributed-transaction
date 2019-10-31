@@ -15,8 +15,6 @@
  */
 package io.agilehandy.txn;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
 import io.agilehandy.commons.api.database.DBSubmitRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
@@ -24,13 +22,12 @@ import io.agilehandy.txn.saga.Saga;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.stereotype.Component;
 
 /**
  * @author Haytham Mohamed
  **/
 
-@Component
+//@Component
 public class TxnClient implements ApplicationRunner {
 
 	private final Saga saga;
@@ -46,18 +43,18 @@ public class TxnClient implements ApplicationRunner {
 		Long jobId = 123L;
 
 		FileSubmitRequest request1 = new FileSubmitRequest();
-		request1.setFileId(UUID.randomUUID());
+		request1.setFileId("file 1");
 		request1.setFilename("shipping_file.txt");
 		request1.setContent("some content".getBytes());
 
 		DBSubmitRequest request2 = new DBSubmitRequest();
 		request2.setField1("f1");
 		request2.setField2("f2");
-		request2.setRecordId(UUID.randomUUID());
+		request2.setRecordId("record 1");
 
 		BCSubmitRequest request3 = new BCSubmitRequest();
 		request3.setContent("some bc content".getBytes());
-		request3.setContentId(UUID.randomUUID());
+		request3.setContentId("content 1");
 
 		saga.orchestrate(jobId, request1, request2, request3);
 

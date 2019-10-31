@@ -21,5 +21,5 @@ public interface DBRequest {
 
 	UUID getGlobalTxnId();
 	Long getJobId();
-	UUID getRecordId();
+	String getRecordId();
 }

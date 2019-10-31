@@ -95,6 +95,7 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 				.initial(JobState.JOB_START)
 				.end(JobState.JOB_COMPLETE)
 				.end(JobState.JOB_FAIL)
+				.end(JobState.JOB_TIME_OUT)
 				.state(JobState.FILE_SUBMIT, context -> handleFileSubmitAction(context), null)
 				.state(JobState.FILE_CANCEL, context -> handleFileCancelAction(context), null)
 				.state(JobState.DB_SUBMIT, context -> handleDbSubmitAction(context), null)
@@ -166,6 +167,7 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 					.target(JobState.FILE_CANCEL)
 					.event(JobEvent.DB_CANCEL_COMPLETE)
 
+				// repeating actions
 				.and().withInternal()
 					.source(JobState.FILE_CANCEL)
 					.action(context -> handleFileCancelAction(context))
@@ -180,6 +182,37 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 					.source(JobState.BC_CANCEL)
 					.action(context -> handleBcCancelAction(context))
 					.event(JobEvent.BC_CANCEL_FAIL)
+
+				// timeouts
+				.and().withExternal()
+					.source(JobState.FILE_SUBMIT)
+					.target(JobState.JOB_TIME_OUT)
+					.event(JobEvent.JOB_TXN_TIMEOUT)
+
+				.and().withExternal()
+					.source(JobState.FILE_CANCEL)
+					.target(JobState.JOB_TIME_OUT)
+					.event(JobEvent.JOB_TXN_TIMEOUT)
+
+				.and().withExternal()
+					.source(JobState.DB_SUBMIT)
+					.target(JobState.JOB_TIME_OUT)
+					.event(JobEvent.JOB_TXN_TIMEOUT)
+
+				.and().withExternal()
+					.source(JobState.DB_CANCEL)
+					.target(JobState.JOB_TIME_OUT)
+					.event(JobEvent.JOB_TXN_TIMEOUT)
+
+				.and().withExternal()
+					.source(JobState.BC_SUBMIT)
+					.target(JobState.JOB_TIME_OUT)
+					.event(JobEvent.JOB_TXN_TIMEOUT)
+
+				.and().withExternal()
+					.source(JobState.BC_CANCEL)
+					.target(JobState.JOB_TIME_OUT)
+					.event(JobEvent.JOB_TXN_TIMEOUT)
 				;
 	}
 

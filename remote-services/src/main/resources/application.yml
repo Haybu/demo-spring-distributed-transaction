@@ -1,3 +1,6 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: remote-services
@@ -53,3 +56,4 @@ bc:
   cancel_higher_bound: 8
   delay: 2
   timeout: 3
+

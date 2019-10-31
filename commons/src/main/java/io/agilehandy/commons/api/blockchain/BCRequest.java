@@ -21,4 +21,5 @@ public interface BCRequest {
 
 	UUID getGlobalTxnId();
 	Long getJobId();
+	String getContentId();
 }

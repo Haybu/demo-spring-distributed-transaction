@@ -15,8 +15,6 @@
  */
 package io.agilehandy.commons.api.blockchain;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.jobs.JobExchange;
 import io.agilehandy.commons.api.jobs.JobState;
 import lombok.Data;
@@ -31,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class BCSubmitRequest extends JobExchange implements BCRequest {
 
 	private JobState request = JobState.BC_SUBMIT;
-	private UUID contentId;
+	private String contentId;
 	private byte[] content;
 
 }

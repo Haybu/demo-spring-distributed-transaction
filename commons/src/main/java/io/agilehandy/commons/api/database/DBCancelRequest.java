@@ -15,8 +15,6 @@
  */
 package io.agilehandy.commons.api.database;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.jobs.JobExchange;
 import io.agilehandy.commons.api.jobs.JobState;
 import lombok.Data;
@@ -31,5 +29,5 @@ import lombok.NoArgsConstructor;
 public class DBCancelRequest extends JobExchange implements DBRequest {
 
 	private JobState request = JobState.DB_CANCEL;
-	private UUID recordId;
+	private String recordId;
 }

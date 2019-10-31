@@ -13,22 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.agilehandy.commons.api.jobs;
+package io.agilehandy.txn.saga.web;
 
-public enum JobState {
+import io.agilehandy.commons.api.blockchain.BCSubmitRequest;
+import io.agilehandy.commons.api.database.DBSubmitRequest;
+import io.agilehandy.commons.api.storage.FileSubmitRequest;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-	JOB_START,
-	JOB_COMPLETE,
-	JOB_FAIL,
-	JOB_TIME_OUT,
+/**
+ * @author Haytham Mohamed
+ **/
 
-	FILE_SUBMIT,
-	FILE_CANCEL,
+@Data
+@NoArgsConstructor
+public class TxnRequest {
 
-	DB_SUBMIT,
-	DB_CANCEL,
+	private Long id;
 
-	BC_SUBMIT,
-	BC_CANCEL
-	;
+	FileSubmitRequest storage;
+
+	DBSubmitRequest metadata;
+
+	BCSubmitRequest blockchain;
 }

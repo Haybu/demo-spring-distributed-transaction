@@ -15,8 +15,6 @@
  */
 package io.agilehandy.commons.api.blockchain;
 
-import java.util.UUID;
-
 import io.agilehandy.commons.api.jobs.JobExchange;
 import io.agilehandy.commons.api.jobs.JobState;
 import lombok.Data;
@@ -31,5 +29,5 @@ import lombok.NoArgsConstructor;
 public class BCCancelRequest extends JobExchange implements BCRequest {
 
 	private JobState request = JobState.BC_CANCEL;
-	private UUID contentId;
+	private String contentId;
 }

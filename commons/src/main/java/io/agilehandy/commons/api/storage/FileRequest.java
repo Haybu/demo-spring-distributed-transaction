@@ -21,6 +21,6 @@ public interface FileRequest {
 
 	UUID getGlobalTxnId();
 	Long getJobId();
-	UUID getFileId();
+	String getFileId();
 	String getFilename();
 }
