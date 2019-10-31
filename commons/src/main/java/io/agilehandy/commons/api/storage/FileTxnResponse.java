@@ -18,6 +18,7 @@ package io.agilehandy.commons.api.storage;
 import java.util.UUID;
 
 import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.jobs.JobExchange;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,13 +28,10 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class FileTxnResponse {
+public class FileTxnResponse extends JobExchange {
 
 	private JobEvent response;
 
-	private UUID globalTxnId;
-
-	private UUID jobId;
 	private UUID fileId;
 	private String filename;
 }

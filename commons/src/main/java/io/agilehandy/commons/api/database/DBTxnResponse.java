@@ -18,6 +18,7 @@ package io.agilehandy.commons.api.database;
 import java.util.UUID;
 
 import io.agilehandy.commons.api.jobs.JobEvent;
+import io.agilehandy.commons.api.jobs.JobExchange;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -27,11 +28,8 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class DBTxnResponse {
+public class DBTxnResponse extends JobExchange {
+
 	private JobEvent response;
-
-	private UUID globalTxnId;
-
-	private UUID jobId;
 	private UUID recordId;
 }

@@ -46,7 +46,7 @@ public class SagaStateMachineInterceptor extends StateMachineInterceptorAdapter<
 	@Override
 	public void preStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
 		//log.info("[interceptor] state machine built is at state: " + stateMachine.getState().getId().name());
-		String tempJobId = String.class.cast(message.getHeaders().getOrDefault("jobId", ""));
+		Long tempJobId = Long.class.cast(message.getHeaders().getOrDefault("jobId", ""));
 		String tempTxnId = String.class.cast(message.getHeaders().getOrDefault("txnId", ""));
 		log.info("[interceptor] state machine accesses Job with jobId = " + tempJobId + " and txnId = " + tempTxnId);
 		Job job = jobRepository.findTransactionByJobIdAndTxnId(tempJobId, tempTxnId);
@@ -57,7 +57,7 @@ public class SagaStateMachineInterceptor extends StateMachineInterceptorAdapter<
 
 	@Override
 	public void postStateChange(State<JobState, JobEvent> state, Message<JobEvent> message, Transition<JobState, JobEvent> transition, StateMachine<JobState, JobEvent> stateMachine) {
-		stateMachineService.releaseStateMachine(stateMachine.getUuid().toString());
+		//stateMachineService.releaseStateMachine(stateMachine.getUuid().toString());
 		//stateMachine.stopReactively().block();
 	}
 }

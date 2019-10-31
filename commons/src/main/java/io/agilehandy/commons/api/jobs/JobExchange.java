@@ -15,5 +15,16 @@
  */
 package io.agilehandy.commons.api.jobs;
 
-public interface JobRequest {
+import java.util.UUID;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class JobExchange {
+
+	private Long jobId;
+	private UUID globalTxnId;
+
 }

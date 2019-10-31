@@ -43,26 +43,23 @@ public class TxnClient implements ApplicationRunner {
 	@Override
 	public void run(ApplicationArguments args) throws Exception {
 
-		UUID jobId = UUID.randomUUID();
+		Long jobId = 123L;
 
 		FileSubmitRequest request1 = new FileSubmitRequest();
-		request1.setJobId(jobId);
 		request1.setFileId(UUID.randomUUID());
 		request1.setFilename("shipping_file.txt");
 		request1.setContent("some content".getBytes());
 
 		DBSubmitRequest request2 = new DBSubmitRequest();
-		request2.setJobId(jobId);
 		request2.setField1("f1");
 		request2.setField2("f2");
 		request2.setRecordId(UUID.randomUUID());
 
 		BCSubmitRequest request3 = new BCSubmitRequest();
-		request3.setJobId(jobId);
 		request3.setContent("some bc content".getBytes());
 		request3.setContentId(UUID.randomUUID());
 
-		saga.orchestrate(request1, request2, request3);
+		saga.orchestrate(jobId, request1, request2, request3);
 
 	}
 }

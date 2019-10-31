@@ -25,7 +25,7 @@ import io.agilehandy.commons.api.database.DBCancelRequest;
 import io.agilehandy.commons.api.database.DBSubmitRequest;
 import io.agilehandy.commons.api.database.DBTxnResponse;
 import io.agilehandy.commons.api.jobs.JobEvent;
-import io.agilehandy.commons.api.jobs.JobRequest;
+import io.agilehandy.commons.api.jobs.JobExchange;
 import io.agilehandy.commons.api.jobs.JobState;
 import io.agilehandy.commons.api.storage.FileCancelRequest;
 import io.agilehandy.commons.api.storage.FileSubmitRequest;
@@ -72,44 +72,63 @@ public class Saga {
 		this.builder = builder;
 	}
 
-	public void orchestrate(FileSubmitRequest fsr, DBSubmitRequest dbr, BCSubmitRequest bcr) {
+	public void orchestrate(Long jobId, FileSubmitRequest fsr, DBSubmitRequest dbr, BCSubmitRequest bcr) {
 		fileSubmitRequest = fsr;
 		dbSubmitRequest = dbr;
 		bcSubmitRequest = bcr;
-		orchestrate();
+		orchestrate(jobId);
 	}
 
-	public void orchestrate() {
+	public void orchestrate(Long jobId) {
+		if (!canOrchestrate(jobId)) {
+			log.info("Cannot run this transaction as same Job with ID " + jobId + " is in progress.");
+			return;
+		}
+
 		log.info("saga orchestration starts.");
 		UUID txnId = UUID.randomUUID();
 		fileSubmitRequest.setGlobalTxnId(txnId);
+		fileSubmitRequest.setJobId(jobId);
 		dbSubmitRequest.setGlobalTxnId(txnId);
+		dbSubmitRequest.setJobId(jobId);
 		bcSubmitRequest.setGlobalTxnId(txnId);
+		bcSubmitRequest.setJobId(jobId);
 		Job job = createJob(fileSubmitRequest, dbSubmitRequest, bcSubmitRequest);
 		start(job.getJobId(), txnId.toString());
 	}
 
+	// checks job transaction DB to make sure there is no inflight txn
+	private boolean canOrchestrate(Long jobId) {
+		Job job = jobRepository.findById(jobId).orElse(null);
+		if (job == null || JobState.valueOf(job.getJobState()) == JobState.JOB_COMPLETE ||
+				JobState.valueOf(job.getJobState()) == JobState.JOB_FAIL) {
+			return true;
+		}
+		return false;
+	}
+
 	// start by submitting the file
-	private void start(String jobId, String txnId) {
+	private void start(Long jobId, String txnId) {
 		signalStateMachine(jobId, txnId.toString(), fileSubmitRequest, JobEvent.JOB_TXN_START);
 	}
 
 	private Job createJob(FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
 		Job job = new Job();
-		job.setJobId(fs.getJobId().toString());
+		job.setJobId(fs.getJobId());
 		job.setTxnId(fs.getGlobalTxnId().toString());
 		job.setJobState(JobState.JOB_START.name());
 		job.setFileId(fs.getFileId().toString());
 		job.setDbRecordId(db.getRecordId().toString());
 		job.setBcRecordId(bc.getContentId().toString());
-		job.setStartTS(new Timestamp(System.currentTimeMillis()));
+		job.setStartTs(new Timestamp(System.currentTimeMillis()));
 		return jobRepository.save(job);
 	}
 
-	public StateMachine<JobState,JobEvent> signalStateMachine(String jobId, String txnId
-			, JobRequest request, JobEvent signal) {
+	public StateMachine<JobState,JobEvent> signalStateMachine(Long jobId, String txnId
+			, JobExchange request, JobEvent signal) {
 		boolean isFirstCall = (signal == JobEvent.JOB_TXN_START);
-		StateMachine<JobState,JobEvent> sm = builder.build(jobId, txnId, isFirstCall);
+		StateMachine<JobState,JobEvent> sm =
+				builder.build(String.valueOf(jobId), txnId, isFirstCall);
 		log.info("machine signal to send is " + signal
 				+ " to machine at state " + sm.getState().getId().name());
 		if (request != null) {
@@ -127,7 +146,7 @@ public class Saga {
 			, condition = "headers['saga_response']=='FILE_SUBMIT_COMPLETE'")
 	public void handleFileSubmitComplete(@Payload FileTxnResponse response) {
 		log.info("Saga receives response from remote file service with signal FILE_SUBMIT_COMPLETE");
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,dbSubmitRequest, JobEvent.FILE_SUBMIT_COMPLETE);
 	}
@@ -141,7 +160,7 @@ public class Saga {
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		fileCancelRequest.setFilename(response.getFilename());
 		fileCancelRequest.setFileId(response.getFileId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,fileCancelRequest, JobEvent.FILE_SUBMIT_FAIL);
 
@@ -151,7 +170,7 @@ public class Saga {
 			, condition = "headers['saga_response']=='FILE_CANCEL_COMPLETE'")
 	public void handleFileCancelComplete(@Payload FileTxnResponse response) {
 		log.info("Saga receives response from remote file service with signal FILE_CANCEL_COMPLETE");
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,null, JobEvent.FILE_CANCEL_COMPLETE);
 	}
@@ -166,7 +185,7 @@ public class Saga {
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		fileCancelRequest.setFilename(response.getFilename());
 		fileCancelRequest.setFileId(response.getFileId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,fileCancelRequest, JobEvent.FILE_CANCEL_FAIL);
 	}
@@ -175,7 +194,7 @@ public class Saga {
 			, condition = "headers['saga_response']=='DB_SUBMIT_COMPLETE'")
 	public void handleDBSubmitComplete(@Payload DBTxnResponse response) {
 		log.info("Saga receives response from remote database service with signal DB_SUBMIT_COMPLETE");
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,bcSubmitRequest, JobEvent.DB_SUBMIT_COMPLETE);
 
@@ -189,7 +208,7 @@ public class Saga {
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		dbCancelRequest.setRecordId(response.getRecordId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,dbCancelRequest, JobEvent.DB_SUBMIT_FAIL);
 
@@ -204,7 +223,7 @@ public class Saga {
 		fileCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		fileCancelRequest.setFilename(fileSubmitRequest.getFilename());
 		fileCancelRequest.setFileId(fileSubmitRequest.getFileId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,fileCancelRequest, JobEvent.DB_CANCEL_COMPLETE);
 
@@ -219,7 +238,7 @@ public class Saga {
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		dbCancelRequest.setRecordId(response.getRecordId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,dbCancelRequest, JobEvent.DB_CANCEL_FAIL);
 
@@ -229,7 +248,7 @@ public class Saga {
 			, condition = "headers['saga_response']=='BC_SUBMIT_COMPLETE'")
 	public void handleBCSubmitComplete(@Payload BCTxnResponse response) {
 		log.info("Saga receives response from remote blockchain service with signal BC_SUBMIT_COMPLETE");
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,null, JobEvent.BC_SUBMIT_COMPLETE);
 
@@ -243,7 +262,7 @@ public class Saga {
 		bcCancelRequest.setJobId(response.getJobId());
 		bcCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		bcCancelRequest.setContentId(response.getContentId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,bcCancelRequest, JobEvent.BC_SUBMIT_FAIL);
 	}
@@ -256,7 +275,7 @@ public class Saga {
 		dbCancelRequest.setJobId(response.getJobId());
 		dbCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		dbCancelRequest.setRecordId(dbSubmitRequest.getRecordId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,dbCancelRequest, JobEvent.BC_CANCEL_COMPLETE);
 	}
@@ -270,7 +289,7 @@ public class Saga {
 		bcCancelRequest.setJobId(response.getJobId());
 		bcCancelRequest.setGlobalTxnId(response.getGlobalTxnId());
 		bcCancelRequest.setContentId(response.getContentId());
-		signalStateMachine(response.getJobId().toString()
+		signalStateMachine(response.getJobId()
 				, response.getGlobalTxnId().toString()
 				,bcCancelRequest, JobEvent.BC_CANCEL_FAIL);
 	}

@@ -17,6 +17,7 @@ package io.agilehandy.commons.api.storage;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.jobs.JobExchange;
 import io.agilehandy.commons.api.jobs.JobState;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,15 +28,13 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class FileSubmitRequest implements FileRequest {
+public class FileSubmitRequest extends JobExchange implements FileRequest {
 
 	private JobState request = JobState.FILE_SUBMIT;
 
-	private UUID globalTxnId;
-
-	private UUID jobId;
 	private UUID fileId;
 	private String filename;
 	private byte[] content;
+
 
 }

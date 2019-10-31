@@ -17,13 +17,9 @@ package io.agilehandy.commons.api.database;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.jobs.JobRequest;
-import io.agilehandy.commons.api.jobs.JobState;
+public interface DBRequest {
 
-public interface DBRequest extends JobRequest {
-
-	JobState getRequest();
 	UUID getGlobalTxnId();
-	UUID getJobId();
+	Long getJobId();
 	UUID getRecordId();
 }

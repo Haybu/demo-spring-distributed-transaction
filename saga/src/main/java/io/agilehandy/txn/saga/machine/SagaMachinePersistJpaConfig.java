@@ -43,7 +43,7 @@ public class SagaMachinePersistJpaConfig {
 	public StateMachineService<JobState, JobEvent> stateMachineService(
 			StateMachineFactory<JobState, JobEvent> stateMachineFactory,
 			StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister) {
-		return new DefaultStateMachineService<JobState, JobEvent>(stateMachineFactory, stateMachineRuntimePersister);
+		return new DefaultStateMachineService<>(stateMachineFactory, stateMachineRuntimePersister);
 	}
 
 }

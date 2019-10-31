@@ -17,14 +17,10 @@ package io.agilehandy.commons.api.storage;
 
 import java.util.UUID;
 
-import io.agilehandy.commons.api.jobs.JobRequest;
-import io.agilehandy.commons.api.jobs.JobState;
+public interface FileRequest {
 
-public interface FileRequest extends JobRequest {
-
-	JobState getRequest();
 	UUID getGlobalTxnId();
+	Long getJobId();
 	UUID getFileId();
 	String getFilename();
-	UUID getJobId();
 }

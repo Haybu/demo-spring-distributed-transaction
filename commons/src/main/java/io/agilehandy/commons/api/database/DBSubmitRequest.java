@@ -17,6 +17,7 @@ package io.agilehandy.commons.api.database;
 
 import java.util.UUID;
 
+import io.agilehandy.commons.api.jobs.JobExchange;
 import io.agilehandy.commons.api.jobs.JobState;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -27,13 +28,9 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class DBSubmitRequest implements DBRequest {
+public class DBSubmitRequest extends JobExchange implements DBRequest {
 
 	private JobState request = JobState.DB_SUBMIT;
-
-	private UUID globalTxnId;
-
-	private UUID jobId;
     private UUID recordId;
 	private String field1;
 	private String field2;

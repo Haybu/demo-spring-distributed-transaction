@@ -21,4 +21,13 @@ spring:
           contentType: application/json
           consumer.headerMode: headers
           group: saga-group
+  datasource:
+    url: jdbc:mysql://localhost:3306/txn
+    username: root
+    password: root
+#    initialization-mode: always
+    jpa:
+      show-sql: true
+      hibernate:
+        ddl-auto: none
 

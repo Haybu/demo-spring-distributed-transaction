@@ -17,6 +17,7 @@ package io.agilehandy.txn.saga.job;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Temporal;
@@ -37,7 +38,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 public class Job {
 
 	@Id
-	private String jobId;
+	@Column(name = "id")
+	//@GeneratedValue(strategy= GenerationType.AUTO)
+	private Long jobId;
 
 	private String txnId;
 
@@ -45,29 +48,29 @@ public class Job {
 
 	@CreationTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date startTS;
+	private Date startTs;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date endTS;
+	private Date endTs;
 
 	@UpdateTimestamp
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date updatedTS;
+	private Date updatedTs;
 
 	private String fileId;
 	private String fileTxnStatus;
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date fileTxnStatusTS;
+	private Date fileTxnStatusTs;
 
 	private String dbRecordId;
 	private String dbTxnStatus;
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date dbTxnStatusTS;
+	private Date dbTxnStatusTs;
 
 	private String bcRecordId;
 	private String bcTxnStatus;
 	@Temporal(TemporalType.TIMESTAMP)
-	private Date bcTxnStatusTS;
+	private Date bcTxnStatusTs;
 }
 
 
