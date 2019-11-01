@@ -58,11 +58,11 @@ may be in a state where it tries to submit a request to store a file or cancel s
 the global transaction should do when it gets to each of these states is managed with
 a Spring State Machine. Using a Spring State Machine give us a luxury of:
 
-1- a voiding cluttering code with a lot of if/else if/else statements of the orchestration cases
-2- defining a state machine as a well-defined configured setup in a java class
-3- defining what the transitions are a permitted
-4- defining what action should be executed when making a transition or when a state change
-5- abstract away how the transaction progresses or performs action from the orchestrator, and delegate
+* a voiding cluttering code with a lot of if/else if/else statements of the orchestration cases
+* defining a state machine as a well-defined configured setup in a java class
+* defining what the transitions are a permitted
+* defining what action should be executed when making a transition or when a state change
+* abstract away how the transaction progresses or performs action from the orchestrator, and delegate
 to the state machine to figure that out
 
 The state machine receives events from the orchestrating Saga. Each event reflects what the Saga
