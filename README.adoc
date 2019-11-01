@@ -1,11 +1,44 @@
 # Microservices Distributed Transaction Management
 
-This demo project illustrates managing a transaction across
-distributed microservices. 
+This demo project illustrates managing a distributed transaction in a
+microservices architecture.
 
-The implemented Global Transaction Manager (GTM) leverages
-a Spring State Machine to coordinate progression of successful 
-individual local transactions and rollbacks. It also leverages Spring 
-Cloud Stream to integrate with distributed services.
+A Global Transaction Manager (GTM) is implemented as a Saga pattern to
+manage orchestrating the transactions across individual services.
+The implementation leverages a Spring State Machine to coordinate progression amongst
+the global transaction collaborators. It also leverages Spring
+Cloud Stream to integrate with those collaborating services.
 
 image::./docs/images/Global_Txn_Manager.png[Distributed Transaction Management]
+
+## Description
+
+A client can use the orchestrating Saga by injecting it as a bean and supply it with the many
+data requests target each remote transacting service. The implementation assumes a global logical
+identifier (as a job id) that assumes the ownership of all individual items in the global
+transaction. So, all requests are submitted with on global identifier (job iD). Every submission of
+a global transaction of same global identifier creates a new global transaction ID. I.e., a global
+transactions - identified with one job id - can have multiple executed instances each with its own
+identifying global transaction ID.
+
+The system is design such that a global transaction will have only one global transaction instance
+executing at a time. Unless a global transaction (identified with a job id) reached its final state
+as completed or failed, no other invocation of the same global transaction can be executed.
+
+This illustration assumes three individual remote services. a file storage service, a database storage
+service and an immutable storage of a block chain. Only mocks of these services were implemented to mimic
+a local transaction of each with some processing delays.
+
+Once a request for each service is composed with the right data to store,
+a global transaction job identifier is then supplied with these requests
+to the saga to coordinate as in the example below:
+
+``` code[java]
+JobState state = saga.orchestrate(jobId, fileStorageRequest
+				, databaseStorageRequest, blockChainStorageRequest);
+```
+
+This invocation would then return the result of final global transaction
+as a job state value. A final global transaction result could take one
+of these values: JOB_COMPLETE, JOB_FAIL or JOB_TIME_OUT.
+
