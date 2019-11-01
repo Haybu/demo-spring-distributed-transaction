@@ -177,6 +177,27 @@ public class Saga {
 		currentStateMachine.sendEvent(Mono.just(message)).blockLast();
 	}
 
+	public Saga addTransactionRequest(FileSubmitRequest request) {
+		this.fileSubmitRequest = request;
+		return this;
+	}
+
+	public Saga addTransactionRequest(DBSubmitRequest request) {
+		this.dbSubmitRequest = request;
+		return this;
+	}
+
+	public Saga addTransactionRequest(BCSubmitRequest request) {
+		this.bcSubmitRequest = request;
+		return this;
+	}
+
+	/**
+	 * ----------------------------------------
+	 * stream listeners
+	 * ----------------------------------------
+	 */
+
 	@StreamListener(target = SagaChannels.TXN_RESPONSE_IN
 			, condition = "headers['saga_response']=='FILE_SUBMIT_COMPLETE'")
 	public void handleFileSubmitComplete(@Payload FileTxnResponse response) {

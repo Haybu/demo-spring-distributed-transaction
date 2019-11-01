@@ -38,8 +38,12 @@ public class WebController {
 	@PostMapping
 	public TxnResponse runTransaction(@RequestBody TxnRequest request) {
 		Long jobId = request.getId();
-		JobState state = saga.orchestrate(jobId, request.getStorage()
-				, request.getMetadata(), request.getBlockchain());
+
+		JobState state = saga.addTransactionRequest(request.getStorage())
+				.addTransactionRequest(request.getMetadata())
+				.addTransactionRequest(request.getBlockchain())
+				.orchestrate(jobId);
+
 		TxnResponse response = new TxnResponse();
 		response.setJobId(jobId);
 		response.setState(state);

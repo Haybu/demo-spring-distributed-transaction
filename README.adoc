@@ -34,8 +34,14 @@ a global transaction job identifier is then supplied with these requests
 to the saga to coordinate as in the example below:
 
 ``` code[java]
-JobState state = saga.orchestrate(jobId, fileStorageRequest
-				, databaseStorageRequest, blockChainStorageRequest);
+
+@Autowired
+private Saga saga;
+
+JobState state = saga.addTransactionRequest(fileStorageRequest)
+				.addTransactionRequest(databaseStorageRequest)
+				.addTransactionRequest(blockChainStorageRequest)
+				.orchestrate(jobId);
 ```
 
 This invocation would then return the result of final global transaction
