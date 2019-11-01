@@ -67,7 +67,8 @@ public class BCHandler {
 			, condition = "headers['saga_request']=='BC_SUBMIT'")
 	public void  handleSubmitBC(@Payload BCSubmitRequest request) {
 		log.info("remote blockchain service receives submit message to process");
-		boolean result = Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay);
+		boolean result = (request != null)?
+				Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay) : false;
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_SUBMIT_COMPLETE) :
 				createBCResponse(request, JobEvent.BC_SUBMIT_FAIL);
@@ -78,7 +79,8 @@ public class BCHandler {
 			, condition = "headers['saga_request']=='BC_CANCEL'")
 	public void handleCancelBC(@Payload BCCancelRequest request) {
 		log.info("remote blockchain service receives cancel message to process");
-		boolean result = Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1);
+		boolean result = (request != null)?
+				Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1) : false;
 		BCTxnResponse response = (result)?
 				createBCResponse(request, JobEvent.BC_CANCEL_COMPLETE) :
 				createBCResponse(request, JobEvent.BC_CANCEL_FAIL);

@@ -67,7 +67,8 @@ public class DBHandler {
 			, condition = "headers['saga_request']=='DB_SUBMIT'")
 	public void handleSubmitDB(@Payload DBSubmitRequest request) {
 		log.info("remote database service receives submit message to process");
-		boolean result = Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay);
+		boolean result = (request != null)?
+				Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay) : false;
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_SUBMIT_COMPLETE) :
 				createDBResponse(request, JobEvent.DB_SUBMIT_FAIL);
@@ -78,7 +79,8 @@ public class DBHandler {
 			, condition = "headers['saga_request']=='DB_CANCEL'")
 	public void handleCancelDB(@Payload DBCancelRequest request) {
 		log.info("remote database service receives cancel message to process");
-		boolean result = Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1);
+		boolean result = (request != null)?
+				Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1) : false;
 		DBTxnResponse response = (result)?
 				createDBResponse(request, JobEvent.DB_CANCEL_COMPLETE) :
 				createDBResponse(request, JobEvent.DB_CANCEL_FAIL);

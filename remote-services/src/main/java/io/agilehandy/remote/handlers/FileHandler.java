@@ -67,7 +67,8 @@ public class FileHandler {
 			, condition = "headers['saga_request']=='FILE_SUBMIT'")
 	public void handleSubmitFile(@Payload FileSubmitRequest request) {
 		log.info("remote file service receives submit message to process");
-		boolean result = Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay);
+		boolean result = (request != null)?
+				Utilities.simulateTxn(max, submitLowerBound, submitHigherBound, delay) : false;
 		FileTxnResponse response = (result)?
 				createFileResponse(request, JobEvent.FILE_SUBMIT_COMPLETE) :
 				createFileResponse(request, JobEvent.FILE_SUBMIT_FAIL);
@@ -78,7 +79,8 @@ public class FileHandler {
 			, condition = "headers['saga_request']=='FILE_CANCEL'")
 	public void handleCancelFile(@Payload FileCancelRequest request) {
 		log.info("remote file service receives cancel message to process");
-		boolean result = Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1);
+		boolean result = (request != null)?
+				Utilities.simulateTxn(max, cancelLowerBound, cancelHigherBound, 1) : false;
 		FileTxnResponse response = (result)?
 				createFileResponse(request, JobEvent.FILE_CANCEL_COMPLETE) :
 				createFileResponse(request, JobEvent.FILE_CANCEL_FAIL);

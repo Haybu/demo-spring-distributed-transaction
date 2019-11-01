@@ -82,27 +82,33 @@ public class Saga {
 
 	public JobState orchestrate(Long jobId, FileSubmitRequest fsr
 			, DBSubmitRequest dbr, BCSubmitRequest bcr) {
-		UUID txnId = UUID.randomUUID();
 		fileSubmitRequest = fsr;
 		dbSubmitRequest = dbr;
 		bcSubmitRequest = bcr;
-		return orchestrate(jobId, txnId);
+		return orchestrate(jobId);
 	}
 
-	private JobState orchestrate(Long jobId, UUID txnId) {
+	public JobState orchestrate(Long jobId) {
+		UUID txnId = UUID.randomUUID();
 		if (!canOrchestrate(jobId)) {
 			log.info("Cannot run this transaction as same Job with ID " + jobId + " is in progress.");
 			return JobState.JOB_FAIL;
 		}
 
 		log.info("saga orchestration starts.");
-		fileSubmitRequest.setGlobalTxnId(txnId);
-		fileSubmitRequest.setJobId(jobId);
-		dbSubmitRequest.setGlobalTxnId(txnId);
-		dbSubmitRequest.setJobId(jobId);
-		bcSubmitRequest.setGlobalTxnId(txnId);
-		bcSubmitRequest.setJobId(jobId);
-		Job job = createJob(fileSubmitRequest, dbSubmitRequest, bcSubmitRequest);
+		if (fileSubmitRequest != null) {
+			fileSubmitRequest.setGlobalTxnId(txnId);
+			fileSubmitRequest.setJobId(jobId);
+		}
+		if (dbSubmitRequest != null) {
+			dbSubmitRequest.setGlobalTxnId(txnId);
+			dbSubmitRequest.setJobId(jobId);
+		}
+		if (bcSubmitRequest != null) {
+			bcSubmitRequest.setGlobalTxnId(txnId);
+			bcSubmitRequest.setJobId(jobId);
+		}
+		Job job = createJob(jobId, txnId.toString(), fileSubmitRequest, dbSubmitRequest, bcSubmitRequest);
 		return start(job.getJobId(), txnId.toString());
 	}
 
@@ -131,14 +137,20 @@ public class Saga {
 		return finalState;
 	}
 
-	private Job createJob(FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
+	private Job createJob(Long jobId, String txnId, FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {
 		Job job = new Job();
-		job.setJobId(fs.getJobId());
-		job.setTxnId(fs.getGlobalTxnId().toString());
+		job.setJobId(jobId);
+		job.setTxnId(txnId);
 		job.setJobState(JobState.JOB_START.name());
-		job.setFileId(fs.getFileId().toString());
-		job.setDbRecordId(db.getRecordId().toString());
-		job.setBcRecordId(bc.getContentId().toString());
+		if (fs != null) {
+			job.setFileId(fs.getFileId().toString());
+		}
+		if (db != null) {
+			job.setDbRecordId(db.getRecordId().toString());
+		}
+		if (bc != null) {
+			job.setBcRecordId(bc.getContentId().toString());
+		}
 		job.setStartTs(new Timestamp(System.currentTimeMillis()));
 		return jobRepository.save(job);
 	}
