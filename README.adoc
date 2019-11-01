@@ -48,3 +48,37 @@ This invocation would then return the result of final global transaction
 as a job state value. A final global transaction result could take one
 of these values: JOB_COMPLETE, JOB_FAIL or JOB_TIME_OUT.
 
+## Transaction State Machine
+
+A global transaction would have different states throughout its lifecycle starting from
+a JOB_START state and end with either JOB_FAIL or JOB_TIME_OUT. In between, a transaction
+may be in a state where it tries to submit a request to store a file or cancel such request
+(FILE_SUBMIT / FILE_CANCEL), and same states for the database and block chain requests
+(DB_SUBMIT / DB_CANCEL, BC_SUBMIT / BC_CANCEL). Transition between these states and how
+the global transaction should do when it gets to each of these states is managed with
+a Spring State Machine. Using a Spring State Machine give us a luxury of:
+
+1- a voiding cluttering code with a lot of if/else if/else statements of the orchestration cases
+2- defining a state machine as a well-defined configured setup in a java class
+3- defining what the transitions are a permitted
+4- defining what action should be executed when making a transition or when a state change
+5- abstract away how the transaction progresses or performs action from the orchestrator, and delegate
+to the state machine to figure that out
+
+The state machine receives events from the orchestrating Saga. Each event reflects what the Saga
+has in turns receives from each individual service to indicate whether a local transaction is
+successful or not.
+
+The state machine reacts by transitioning to a proper state and as a
+result fires an appropriate action of what should happen next. It does so by publishing
+a request via one of the appropriate channel message. Each individual service subscribe
+to its request channels, listens to coming streams of requests, performs the requested action
+and publish a transaction result to the one response channel that the Saga orchestrator is listening to.
+
+
+## Transaction Orchestrator
+
+The transaction is orchestrated with a Saga which acts as a stream listener that subscribes to
+a message channel. Each message is published from one the remote services to contain the transaction
+result. The Saga receives this message and reacts by firing a proper event to the state machine.
+
