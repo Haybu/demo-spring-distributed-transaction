@@ -43,12 +43,19 @@ public class SagaStateMachineJpaBuilder implements SagaStateMachineBuilder {
 	@Override
 	public StateMachine<JobState, JobEvent> getStateMachine(String txnId, boolean isFirstEvent) {
 		log.info("Building a machine");
-		StateMachine<JobState,JobEvent> machine = stateMachineService.acquireStateMachine(txnId, isFirstEvent);
-		if (isFirstEvent) {
-			machine.getStateMachineAccessor()
-					.doWithAllRegions(sma ->
-						sma.addStateMachineInterceptor(new SagaStateMachineInterceptor(stateMachineService, jobRepository)));
+
+		if(!isFirstEvent) {
+			stateMachineService.releaseStateMachine(txnId);
 		}
+
+		StateMachine<JobState,JobEvent> machine = stateMachineService.acquireStateMachine(txnId);
+		
+		// interceptor to sync job status
+		machine.getStateMachineAccessor()
+				.doWithAllRegions(sma ->
+					sma.addStateMachineInterceptor(new SagaStateMachineInterceptor(stateMachineService
+							, jobRepository)));
+
 		machine.startReactively().block();
 		log.info("machine is now ready with state " + machine.getState().getId().name());
 		return machine;

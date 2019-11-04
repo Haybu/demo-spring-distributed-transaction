@@ -123,18 +123,30 @@ public class Saga {
 		signalStateMachine(jobId, txnId, fileSubmitRequest, JobEvent.JOB_TXN_START);
 		long startTimestamp = System.currentTimeMillis();
 		long currentTimestamp = startTimestamp;
+		boolean isTimeOut = false;
 
-		while(!currentStateMachine.isComplete()) {
+		while(!isTerminalState()) {
 			if (currentTimestamp - startTimestamp > timeout) {
 				log.info("Distributed transaction for job Id " + jobId + " and txn Id " + txnId + " is timed out");
-				signalStateMachine(jobId, txnId, null, JobEvent.JOB_TXN_TIMEOUT);
+				isTimeOut = true;
 			}
 			currentTimestamp = System.currentTimeMillis();
 		}
+
+		if (isTimeOut) {
+			signalStateMachine(jobId, txnId, null, JobEvent.JOB_TXN_TIMEOUT);
+		}
+
 		JobState finalState = currentStateMachine.getState().getId();
 		log.info("Final Transaction state is " + finalState + ". Job completes in "
 				+ (currentTimestamp - startTimestamp) + " milliseconds");
 		return finalState;
+	}
+
+	private boolean isTerminalState() {
+		JobState state = JobState.valueOf(currentStateMachine.getState().getId().name());
+		return (state == JobState.JOB_TIME_OUT || state == JobState.JOB_COMPLETE
+				|| state == JobState.JOB_FAIL);
 	}
 
 	private Job createJob(Long jobId, String txnId, FileSubmitRequest fs, DBSubmitRequest db, BCSubmitRequest bc) {

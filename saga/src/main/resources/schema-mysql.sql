@@ -22,6 +22,6 @@ create table txn.jobs (
 create table txn.state_machine (
     machine_id VARCHAR (100),
     state VARCHAR(100),
-    state_machine_context TINYBLOB,
+    state_machine_context BLOB,
     PRIMARY KEY ( machine_id )
 );

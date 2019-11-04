@@ -52,11 +52,12 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 
 	private final SagaChannels channels;
 	private final SagaStateMachineMonitor monitor;
-	//private final StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister;
+	private final StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister;
 
-	public SagaStateMachine(SagaChannels channels, SagaStateMachineMonitor monitor, StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister) {
+	public SagaStateMachine(SagaChannels channels, SagaStateMachineMonitor monitor, StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister, StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister1) {
 		this.channels = channels;
 		this.monitor = monitor;
+		this.stateMachineRuntimePersister = stateMachineRuntimePersister1;
 	}
 
 	@Override
@@ -85,7 +86,7 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 				//.machineId("saga-machine")
 				.listener(listener)
 			.and().withMonitoring().monitor(monitor)
-			//.and().withPersistence().runtimePersister(stateMachineRuntimePersister);
+			.and().withPersistence().runtimePersister(stateMachineRuntimePersister);
 				;
 	}
 
