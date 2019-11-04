@@ -37,6 +37,7 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.listener.StateMachineListener;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
+import org.springframework.statemachine.persist.StateMachineRuntimePersister;
 import org.springframework.statemachine.state.State;
 import org.springframework.stereotype.Component;
 
@@ -51,8 +52,9 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 
 	private final SagaChannels channels;
 	private final SagaStateMachineMonitor monitor;
+	//private final StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister;
 
-	public SagaStateMachine(SagaChannels channels, SagaStateMachineMonitor monitor) {
+	public SagaStateMachine(SagaChannels channels, SagaStateMachineMonitor monitor, StateMachineRuntimePersister<JobState, JobEvent, String> stateMachineRuntimePersister) {
 		this.channels = channels;
 		this.monitor = monitor;
 	}
@@ -83,6 +85,7 @@ public class SagaStateMachine extends EnumStateMachineConfigurerAdapter<JobState
 				//.machineId("saga-machine")
 				.listener(listener)
 			.and().withMonitoring().monitor(monitor)
+			//.and().withPersistence().runtimePersister(stateMachineRuntimePersister);
 				;
 	}
 
