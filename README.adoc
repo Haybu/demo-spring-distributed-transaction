@@ -71,9 +71,9 @@ successful or not.
 
 The state machine reacts by transitioning to a proper state and as a
 result fires an appropriate action of what should happen next. It does so by publishing
-a request via one of the appropriate channel message. Each individual service subscribe
+a request via one of the appropriate channel message. Each individual service subscribes
 to its request channels, listens to coming streams of requests, performs the requested action
-and publish a transaction result to the one response channel that the Saga orchestrator is listening to.
+and publishes a transaction result to the one response channel that the Saga orchestrator is listening to.
 
 
 ## Transaction Orchestrator
