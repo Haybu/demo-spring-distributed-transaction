@@ -21,7 +21,7 @@ a global transaction of same global identifier creates a new global transaction 
 transactions - identified with one job id - can have multiple executed instances each with its own
 identifying global transaction ID.
 
-The system is design such that a global transaction will have only one global transaction instance
+The system is designed such that a global transaction will have only one global transaction instance
 executing at a time. Unless a global transaction (identified with a job id) reached its final state
 as completed or failed, no other invocation of the same global transaction can be executed.
 
